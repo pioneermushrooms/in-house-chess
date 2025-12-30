@@ -223,3 +223,10 @@
 - [x] These config files get bundled into dist/index.js - that's why error persisted
 - [x] Pushed commit 795dab1 with config file fixes
 - [x] Railway deployment SUCCESSFUL! Server running on port 8080
+
+## Fix "crypto is not defined" Error in Production
+- [x] Find where crypto is used without import (jose library in sdk.ts)
+- [x] Add proper crypto import to sdk.ts
+- [x] Test guest login locally (dev server running)
+- [x] Push fix to GitHub (commit 5aebefb)
+- [ ] User should verify Railway deployment works
