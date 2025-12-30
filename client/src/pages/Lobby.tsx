@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Trophy, Swords, Link as LinkIcon, History, User } from "lucide-react";
+import { ActiveGames } from "@/components/ActiveGames";
 
 export default function Lobby() {
   const { user, loading } = useAuth();
@@ -242,8 +243,11 @@ export default function Lobby() {
             </Tabs>
           </div>
 
-          {/* Leaderboard */}
-          <div>
+          {/* Active Games */}
+          <div className="space-y-6">
+            <ActiveGames />
+            
+            {/* Leaderboard */}
             <Card className="bg-slate-800/50 border-slate-700">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">

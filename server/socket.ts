@@ -123,6 +123,9 @@ export function setupSocketIO(httpServer: HTTPServer) {
         let gameState = activeGames.get(data.gameId);
         if (!gameState && game.status === "active") {
           const chess = new Chess(game.currentFen);
+          const moveList = game.moveList ? JSON.parse(game.moveList) : [];
+          const hasStarted = moveList.length > 0;
+          
           gameState = {
             gameId: data.gameId,
             chess,
@@ -134,7 +137,11 @@ export function setupSocketIO(httpServer: HTTPServer) {
             currentTurn: chess.turn() === "w" ? "white" : "black",
           };
           activeGames.set(data.gameId, gameState);
-          startGameClock(data.gameId, gameState, io);
+          
+          // Only start clock if game has actually started (moves have been made)
+          if (hasStarted) {
+            startGameClock(data.gameId, gameState, io);
+          }
         }
 
         // Send current game state
@@ -200,7 +207,13 @@ export function setupSocketIO(httpServer: HTTPServer) {
           // Get move list
           const game = await getGameById(data.gameId);
           const moveList = game?.moveList ? JSON.parse(game.moveList) : [];
+          const isFirstMove = moveList.length === 0;
           moveList.push(move.san);
+          
+          // Start the clock on first move
+          if (isFirstMove && !gameState.intervalId) {
+            startGameClock(data.gameId, gameState, io);
+          }
 
           // Check for game end conditions
           let status = "active";

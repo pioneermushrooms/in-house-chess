@@ -87,3 +87,10 @@
 - [ ] Auto-start game when second player joins (game starts when white makes first move)
 - [x] Fix WebSocket error handling to show actual error messages instead of [object Object]
 - [x] Fix socket connection errors - allow second player to join game and auto-assign as black player
+
+## New Features & Fixes
+- [x] Fix clock to only start after first move is made (not when second player joins)
+- [x] Fix invite code join to allow joining active games that haven't started yet
+- [x] Add sidebar showing current games in progress with click-to-join
+- [x] Add move sound effects (move, capture, check, game end)
+- [x] Show captured pieces display beside the board

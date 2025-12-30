@@ -170,35 +170,46 @@ export const appRouter = router({
           throw new Error("Game not found");
         }
 
-        if (game.status !== "waiting") {
+        // Allow joining if game is waiting OR active but no moves made yet
+        const moveList = game.moveList ? JSON.parse(game.moveList) : [];
+        const hasStarted = moveList.length > 0;
+        
+        if (game.status === "completed" || game.status === "abandoned") {
+          throw new Error("Game has ended");
+        }
+        
+        if (hasStarted) {
           throw new Error("Game already started");
         }
-
-        // Assign players to colors randomly
-        const isWhite = Math.random() < 0.5;
         
-        if (!game.whitePlayerId && !game.blackPlayerId) {
-          // First player to join
-          await db.updateGame(game.id, {
-            [isWhite ? "whitePlayerId" : "blackPlayerId"]: player.id,
-          });
-        } else if (!game.whitePlayerId || !game.blackPlayerId) {
-          // Second player joins, game starts
-          const updates: any = {
-            [game.whitePlayerId ? "blackPlayerId" : "whitePlayerId"]: player.id,
-            status: "active",
-            startedAt: new Date(),
-          };
-          await db.updateGame(game.id, updates);
-        } else {
+        // Check if game is full
+        if (game.whitePlayerId && game.blackPlayerId) {
           throw new Error("Game is full");
         }
 
+        // Assign player to the empty slot
+        const updates: any = {};
+        
+        if (!game.whitePlayerId) {
+          updates.whitePlayerId = player.id;
+        } else if (!game.blackPlayerId) {
+          updates.blackPlayerId = player.id;
+          // Second player joins, mark game as active
+          updates.status = "active";
+          updates.startedAt = new Date();
+        }
+        
+        await db.updateGame(game.id, updates);
+
         return { gameId: game.id };
       }),
+    // Get active games
+    getActive: publicProcedure.query(async () => {
+      return await db.getActiveGames();
+    }),
 
     // Get game by ID with player data
-    getById: protectedProcedure
+    getById: publicProcedure
       .input(z.object({ gameId: z.number() }))
       .query(async ({ input }) => {
         const game = await db.getGameById(input.gameId);

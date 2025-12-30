@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, users,
@@ -222,11 +222,45 @@ export async function findMatchmakingOpponent(timeControl: string, rating: numbe
 }
 
 // Leaderboard queries
-export async function getLeaderboard(limit = 100) {
+export async function getLeaderboard(limit: number = 10) {
   const db = await getDb();
   if (!db) return [];
-  const result = await db.select().from(players)
-    .orderBy(sql`${players.rating} DESC`)
+
+  return await db
+    .select()
+    .from(players)
+    .orderBy(desc(players.rating))
     .limit(limit);
-  return result;
+}
+
+export async function getActiveGames() {
+  const db = await getDb();
+  if (!db) return [];
+
+  const activeGames = await db
+    .select()
+    .from(games)
+    .where(eq(games.status, "active"))
+    .orderBy(desc(games.createdAt))
+    .limit(20);
+
+  // Fetch player data for each game
+  const gamesWithPlayers = await Promise.all(
+    activeGames.map(async (game) => {
+      const whitePlayer = game.whitePlayerId
+        ? await db.select().from(players).where(eq(players.id, game.whitePlayerId)).limit(1)
+        : [];
+      const blackPlayer = game.blackPlayerId
+        ? await db.select().from(players).where(eq(players.id, game.blackPlayerId)).limit(1)
+        : [];
+
+      return {
+        ...game,
+        whitePlayer: whitePlayer[0] || null,
+        blackPlayer: blackPlayer[0] || null,
+      };
+    })
+  );
+
+  return gamesWithPlayers;
 }

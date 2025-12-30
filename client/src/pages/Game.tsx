@@ -9,6 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Flag, HandshakeIcon, RotateCcw } from "lucide-react";
+import { chessSounds } from "@/lib/sounds";
+import { CapturedPieces } from "@/components/CapturedPieces";
 
 export default function Game() {
   const [, params] = useRoute("/game/:gameId");
@@ -67,6 +69,17 @@ export default function Game() {
       setGameResult(data.result);
       setEndReason(data.endReason);
       setDrawOffered(false);
+      
+      // Play sound effects
+      if (data.move.includes("x")) {
+        chessSounds.capture();
+      } else {
+        chessSounds.move();
+      }
+      
+      if (chess.isCheck()) {
+        chessSounds.check();
+      }
     });
 
     // Listen for clock updates
@@ -81,6 +94,7 @@ export default function Game() {
       setGameResult(data.result);
       setEndReason(data.endReason);
       toast.success(`Game over: ${data.endReason}`);
+      chessSounds.gameEnd();
     });
 
     // Listen for draw offers
@@ -226,6 +240,13 @@ export default function Game() {
                 }}
               />
             </div>
+            
+            {/* Captured Pieces */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardContent className="p-4">
+                <CapturedPieces fen={fen} />
+              </CardContent>
+            </Card>
 
             {/* Player Info */}
             <Card className="bg-slate-800/50 border-slate-700">
