@@ -1,0 +1,36 @@
+{
+  "query": "SHOW CREATE TABLE games",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CLnct8dkeNkwEf.d4aab037a1db --database H3ST3PoK7akrmaFC8LSYTs --execute SHOW CREATE TABLE games",
+  "rows": [
+    {
+      "Table": "games",
+      "Create Table": "CREATE TABLE `games` ("
+    }
+  ],
+  "messages": [
+    "  `id` int(11) NOT NULL AUTO_INCREMENT,",
+    "  `inviteCode` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `whitePlayerId` int(11) DEFAULT NULL,",
+    "  `blackPlayerId` int(11) DEFAULT NULL,",
+    "  `timeControl` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `initialTime` int(11) NOT NULL,",
+    "  `increment` int(11) NOT NULL,",
+    "  `currentFen` text COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `moveList` text COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `status` enum('waiting','active','completed','abandoned') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'waiting',",
+    "  `result` enum('white_win','black_win','draw','abandoned') COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `endReason` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `whiteTimeRemaining` int(11) DEFAULT NULL,",
+    "  `blackTimeRemaining` int(11) DEFAULT NULL,",
+    "  `lastMoveAt` timestamp NULL DEFAULT NULL,",
+    "  `isRated` int(11) NOT NULL DEFAULT '1',",
+    "  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+    "  `startedAt` timestamp NULL DEFAULT NULL,",
+    "  `endedAt` timestamp NULL DEFAULT NULL,",
+    "  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */",
+    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+  ],
+  "stdout": "Table\tCreate Table\ngames\tCREATE TABLE `games` (\n  `id` int(11) NOT NULL AUTO_INCREMENT,\n  `inviteCode` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `whitePlayerId` int(11) DEFAULT NULL,\n  `blackPlayerId` int(11) DEFAULT NULL,\n  `timeControl` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `initialTime` int(11) NOT NULL,\n  `increment` int(11) NOT NULL,\n  `currentFen` text COLLATE utf8mb4_unicode_ci NOT NULL,\n  `moveList` text COLLATE utf8mb4_unicode_ci NOT NULL,\n  `status` enum('waiting','active','completed','abandoned') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'waiting',\n  `result` enum('white_win','black_win','draw','abandoned') COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `endReason` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `whiteTimeRemaining` int(11) DEFAULT NULL,\n  `blackTimeRemaining` int(11) DEFAULT NULL,\n  `lastMoveAt` timestamp NULL DEFAULT NULL,\n  `isRated` int(11) NOT NULL DEFAULT '1',\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `startedAt` timestamp NULL DEFAULT NULL,\n  `endedAt` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci\n",
+  "stderr": "",
+  "execution_time_ms": 720
+}

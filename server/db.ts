@@ -1,6 +1,12 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { 
+  InsertUser, users,
+  Player, InsertPlayer, players,
+  Game, InsertGame, games,
+  RatingChange, InsertRatingChange, ratingChanges,
+  MatchmakingQueueEntry, InsertMatchmakingQueueEntry, matchmakingQueue
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +95,131 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Player queries
+export async function getPlayerByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(players).where(eq(players.userId, userId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getPlayerByAlias(alias: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(players).where(eq(players.alias, alias)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createPlayer(data: InsertPlayer) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(players).values(data);
+  return Number(result[0].insertId);
+}
+
+export async function updatePlayerStats(playerId: number, updates: Partial<Player>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(players).set(updates).where(eq(players.id, playerId));
+}
+
+export async function updatePlayerRating(playerId: number, newRating: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(players).set({ rating: newRating }).where(eq(players.id, playerId));
+}
+
+// Game queries
+export async function createGame(data: InsertGame) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(games).values(data);
+  return Number(result[0].insertId);
+}
+
+export async function getGameById(gameId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(games).where(eq(games.id, gameId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getGameByInviteCode(inviteCode: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(games).where(eq(games.inviteCode, inviteCode)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateGame(gameId: number, updates: Partial<Game>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(games).set(updates).where(eq(games.id, gameId));
+}
+
+export async function getPlayerGames(playerId: number, limit = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db.select().from(games)
+    .where(
+      sql`${games.whitePlayerId} = ${playerId} OR ${games.blackPlayerId} = ${playerId}`
+    )
+    .orderBy(sql`${games.createdAt} DESC`)
+    .limit(limit);
+  return result;
+}
+
+// Rating change queries
+export async function recordRatingChange(data: InsertRatingChange) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(ratingChanges).values(data);
+}
+
+export async function getPlayerRatingHistory(playerId: number, limit = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db.select().from(ratingChanges)
+    .where(eq(ratingChanges.playerId, playerId))
+    .orderBy(sql`${ratingChanges.createdAt} DESC`)
+    .limit(limit);
+  return result;
+}
+
+// Matchmaking queue queries
+export async function addToMatchmakingQueue(data: InsertMatchmakingQueueEntry) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(matchmakingQueue).values(data);
+}
+
+export async function removeFromMatchmakingQueue(playerId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(matchmakingQueue).where(eq(matchmakingQueue.playerId, playerId));
+}
+
+export async function findMatchmakingOpponent(timeControl: string, rating: number, playerId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  // Find opponent with similar rating (within 200 points) and same time control
+  const result = await db.select().from(matchmakingQueue)
+    .where(
+      sql`${matchmakingQueue.timeControl} = ${timeControl} 
+          AND ${matchmakingQueue.playerId} != ${playerId}
+          AND ABS(${matchmakingQueue.rating} - ${rating}) <= 200`
+    )
+    .orderBy(sql`ABS(${matchmakingQueue.rating} - ${rating})`)
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// Leaderboard queries
+export async function getLeaderboard(limit = 100) {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db.select().from(players)
+    .orderBy(sql`${players.rating} DESC`)
+    .limit(limit);
+  return result;
+}
