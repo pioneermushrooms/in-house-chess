@@ -230,3 +230,11 @@
 - [x] Test guest login locally (dev server running)
 - [x] Push fix to GitHub (commit 5aebefb)
 - [ ] User should verify Railway deployment works
+
+## Fix Client-Side Crypto Error
+- [x] Error is in client bundle (index-BCHeoNpC.js), not server
+- [x] Find why server SDK code is being bundled into client (jose in dependencies)
+- [x] jose library was being bundled into client by Vite
+- [x] Added rollupOptions.external and optimizeDeps.exclude for jose
+- [x] Pushed commit 921fea6
+- [ ] User should verify Railway deployment works
