@@ -73,3 +73,7 @@
 - [ ] Highlight last move
 - [ ] Show check indicator
 - [ ] Design clean lobby interface
+
+## Bug Fixes
+- [x] Fix React setState error in Home component redirect (wrap setLocation in useEffect)
+- [x] Fix React hooks error in Lobby component (move all hooks before conditional returns)

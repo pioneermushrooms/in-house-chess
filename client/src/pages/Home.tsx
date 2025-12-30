@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { useLocation } from "wouter";
+import { useEffect } from "react";
 
 /**
  * All content in this page are only for example, replace with your own feature implementation
@@ -13,10 +14,11 @@ export default function Home() {
   const [, setLocation] = useLocation();
 
   // Redirect to lobby if already logged in
-  if (!loading && isAuthenticated) {
-    setLocation("/lobby");
-    return null;
-  }
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      setLocation("/lobby");
+    }
+  }, [loading, isAuthenticated, setLocation]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">

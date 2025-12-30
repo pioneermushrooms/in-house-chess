@@ -22,6 +22,26 @@ export default function Lobby() {
 
   const { data: leaderboard } = trpc.leaderboard.getTop.useQuery({ limit: 10 });
 
+  const createGame = trpc.game.create.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Game created! Invite code: ${data.inviteCode}`);
+      setLocation(`/game/${data.gameId}`);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const joinGame = trpc.game.join.useMutation({
+    onSuccess: (data) => {
+      toast.success("Joined game!");
+      setLocation(`/game/${data.gameId}`);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   useEffect(() => {
     if (!loading && !user) {
       setLocation("/");
@@ -45,26 +65,6 @@ export default function Lobby() {
   if (!player) {
     return null;
   }
-
-  const createGame = trpc.game.create.useMutation({
-    onSuccess: (data) => {
-      toast.success(`Game created! Invite code: ${data.inviteCode}`);
-      setLocation(`/game/${data.gameId}`);
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const joinGame = trpc.game.join.useMutation({
-    onSuccess: (data) => {
-      toast.success("Joined game!");
-      setLocation(`/game/${data.gameId}`);
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
 
   const handleQuickPlay = () => {
     toast.info("Matchmaking feature coming soon");
