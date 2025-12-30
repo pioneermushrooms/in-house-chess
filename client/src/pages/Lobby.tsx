@@ -11,6 +11,65 @@ import { toast } from "sonner";
 import { Trophy, Swords, Link as LinkIcon, History, User } from "lucide-react";
 import { ActiveGames } from "@/components/ActiveGames";
 
+function RecentGamesPreview() {
+  const { data: games, isLoading } = trpc.player.getGames.useQuery({ limit: 5 });
+  const { data: player } = trpc.player.getProfile.useQuery();
+  const [, setLocation] = useLocation();
+
+  if (isLoading) {
+    return <div className="text-slate-400 text-center py-4">Loading...</div>;
+  }
+
+  if (!games || games.length === 0) {
+    return (
+      <div className="text-slate-400 text-center py-8">
+        No games played yet. Start your first match!
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {games.map((game: any) => {
+        const isWhite = game.whitePlayerId === player?.id;
+        const result = game.status === "completed" 
+          ? (game.result === "draw" 
+              ? "Draw" 
+              : (game.result === "white_wins" && isWhite) || (game.result === "black_wins" && !isWhite)
+                ? "Won"
+                : "Lost")
+          : "In Progress";
+        const resultColor = result === "Won" ? "text-green-400" : result === "Lost" ? "text-red-400" : result === "Draw" ? "text-yellow-400" : "text-blue-400";
+
+        return (
+          <div
+            key={game.id}
+            onClick={() => setLocation(`/game/${game.id}`)}
+            className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg hover:bg-slate-900/70 cursor-pointer transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${
+                  isWhite ? "bg-white" : "bg-slate-900 border border-slate-600"
+                }`}></div>
+                <span className="text-sm text-slate-300">
+                  {isWhite ? "White" : "Black"}
+                </span>
+              </div>
+              <span className="text-xs text-slate-500">
+                {new Date(game.createdAt).toLocaleDateString()}
+              </span>
+            </div>
+            <span className={`text-sm font-medium ${resultColor}`}>
+              {result}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function Lobby() {
   const { user, loading } = useAuth();
   const [, setLocation] = useLocation();
@@ -293,15 +352,22 @@ export default function Lobby() {
               <TabsContent value="history">
                 <Card className="bg-slate-800/50 border-slate-700">
                   <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <History className="h-5 w-5" />
-                      Recent Games
-                    </CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <History className="h-5 w-5" />
+                        Recent Games
+                      </CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setLocation("/history")}
+                      >
+                        View All
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-slate-400 text-center py-8">
-                      No games played yet. Start your first match!
-                    </p>
+                    <RecentGamesPreview />
                   </CardContent>
                 </Card>
               </TabsContent>

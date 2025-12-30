@@ -179,3 +179,15 @@
 - [x] Created deployment guide for external hosting platforms (v2)
 - [x] Created quick-start script for local deployment
 - [x] Documented all deployment options and troubleshooting
+
+## Polish V1 for Local Deployment
+- [x] Verify stats system works correctly (rating updates after games)
+- [x] Test W-L-D record tracking
+- [x] Build game history page showing last 10 games
+- [x] Add "Load More" dropdown for additional games
+- [x] Add recent games preview in Lobby History tab
+- [x] All 11 vitest tests passing
+- [x] Create instructions for downloading files from Manus
+- [x] Research Railway deployment options
+- [x] Research Vercel deployment with WebSocket support
+- [x] Created comprehensive DEPLOYMENT-FAQ.md

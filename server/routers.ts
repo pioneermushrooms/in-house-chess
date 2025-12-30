@@ -20,6 +20,11 @@ export const appRouter = router({
   }),
 
   player: router({
+    // Get current player profile
+    getProfile: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getPlayerByUserId(ctx.user.id);
+    }),
+
     // Get or create player profile for current user
     getOrCreate: protectedProcedure.query(async ({ ctx }) => {
       let player = await db.getPlayerByUserId(ctx.user.id);
