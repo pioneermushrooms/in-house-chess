@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,9 @@ import { toast } from "sonner";
 export default function SelectAlias() {
   const [alias, setAlias] = useState("");
   const [, setLocation] = useLocation();
+  
+  const { data: existingPlayer, isLoading } = trpc.player.getOrCreate.useQuery();
+  
   const createPlayer = trpc.player.create.useMutation({
     onSuccess: () => {
       toast.success("Player profile created!");
@@ -20,6 +23,13 @@ export default function SelectAlias() {
     },
   });
 
+  useEffect(() => {
+    if (!isLoading && existingPlayer) {
+      // Player already exists, redirect to lobby
+      setLocation("/lobby");
+    }
+  }, [existingPlayer, isLoading, setLocation]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (alias.length < 3) {
@@ -28,6 +38,14 @@ export default function SelectAlias() {
     }
     createPlayer.mutate({ alias });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
