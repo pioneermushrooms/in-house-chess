@@ -23,6 +23,11 @@ export async function setupVite(app: Express, server: Server) {
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
+    
+    // Skip Socket.IO requests
+    if (url.startsWith('/socket.io/')) {
+      return next();
+    }
 
     try {
       const clientTemplate = path.resolve(

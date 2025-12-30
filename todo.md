@@ -140,12 +140,14 @@
 - [x] Add Practice Mode button to Lobby
 
 ## Fix Real-Time Two-Player Gameplay
-- [ ] Debug why moves don't sync between players
-- [ ] Verify socket room membership when both players join
-- [ ] Ensure game_state event sends complete data to both players
-- [ ] Fix move_made event broadcasting
+- [x] Debug why moves don't sync between players
+- [x] Verify socket room membership when both players join
+- [x] Ensure game_state event sends complete data to both players
+- [x] Fix move_made event broadcasting
 - [x] Fix game status check to allow moves in waiting/active states
-- [ ] Test complete flow: create → join → both players make moves
+- [x] Test complete flow: create → join → both players make moves
+- [x] Fix Vite middleware blocking Socket.IO paths
+- [x] Fix socket cookie authentication
 
 ## Socket Connection Errors
 - [x] Check server logs to see actual error messages
@@ -157,3 +159,13 @@
 - [ ] Ensure activeGames Map is populated when game becomes active
 - [x] Fix socket authentication - session cookie is httpOnly and can't be read by client JS
 - [x] Change socket auth to use withCredentials and read cookie from server-side request headers
+
+## Current Issue - Moves Not Being Processed
+- [x] Add detailed server-side logging to make_move handler
+- [x] Check if activeGames Map is populated when both players join
+- [x] Verify game state is being sent to client after join_game
+- [x] Test if make_move events are reaching the server
+- [x] Check if move validation is passing
+- [x] Ensure move_made events are broadcast to both players
+- [x] Fix Vite catch-all route intercepting Socket.IO connections
+- [x] Fix socket authentication using wrong cookie name (was 'manus-session', should be 'app_session_id')

@@ -11,6 +11,7 @@ import {
 } from "./db";
 import { getUserByOpenId } from "./db";
 import { sdk } from "./_core/sdk";
+import { COOKIE_NAME } from "@shared/const";
 
 interface AuthenticatedSocket extends Socket {
   userId?: number;
@@ -32,6 +33,7 @@ interface GameState {
 const activeGames = new Map<number, GameState>();
 
 export function setupSocketIO(httpServer: HTTPServer) {
+  console.log("[Socket.IO] Setting up Socket.IO server...");
   const io = new SocketIOServer(httpServer, {
     cors: {
       origin: "*",
@@ -39,13 +41,18 @@ export function setupSocketIO(httpServer: HTTPServer) {
     },
     path: "/socket.io/",
   });
+  console.log("[Socket.IO] Socket.IO server initialized");
 
   // Authentication middleware
   io.use(async (socket: AuthenticatedSocket, next) => {
+    console.log("[Socket.IO Auth] New connection attempt");
+    console.log("[Socket.IO Auth] Headers:", socket.handshake.headers);
     try {
       // Extract session token from cookies
       const cookies = socket.handshake.headers.cookie;
+      console.log("[Socket.IO Auth] Cookies:", cookies);
       if (!cookies) {
+        console.log("[Socket.IO Auth] ERROR: No cookies found");
         return next(new Error("Authentication required"));
       }
       
@@ -56,8 +63,11 @@ export function setupSocketIO(httpServer: HTTPServer) {
         if (key && value) cookieObj[key] = value;
       });
       
-      const token = cookieObj['manus-session'];
+      const token = cookieObj[COOKIE_NAME];
+      console.log("[Socket.IO Auth] Parsed cookies:", cookieObj);
+      console.log("[Socket.IO Auth] Session token:", token ? "Found" : "Not found");
       if (!token) {
+        console.log("[Socket.IO Auth] ERROR: No session token in cookies");
         return next(new Error("Authentication required"));
       }
 
@@ -78,6 +88,7 @@ export function setupSocketIO(httpServer: HTTPServer) {
 
       socket.userId = user.id;
       socket.playerId = player.id;
+      console.log(`[Socket.IO Auth] SUCCESS - User ${user.id}, Player ${player.id}`);
       next();
     } catch (error) {
       next(new Error("Authentication failed"));
@@ -85,7 +96,9 @@ export function setupSocketIO(httpServer: HTTPServer) {
   });
 
   io.on("connection", (socket: AuthenticatedSocket) => {
-    console.log(`Player ${socket.playerId} connected`);
+    console.log(`[Socket.IO] ===== NEW CONNECTION =====`);
+    console.log(`[Socket.IO] Player ${socket.playerId} connected (User ID: ${socket.userId})`);
+    console.log(`[Socket.IO] Socket ID: ${socket.id}`);
 
     // Join game
     socket.on(
@@ -208,11 +221,19 @@ export function setupSocketIO(httpServer: HTTPServer) {
     socket.on(
       "make_move",
       async (data: { gameId: number; from: string; to: string; promotion?: string }) => {
-        console.log(`[Socket] make_move from player ${socket.playerId}: ${data.from} -> ${data.to}`);
+        console.log(`[Socket] ===== MAKE_MOVE EVENT RECEIVED =====`);
+        console.log(`[Socket] Player ${socket.playerId} attempting move: ${data.from} -> ${data.to}`);
+        console.log(`[Socket] Game ID: ${data.gameId}`);
+        console.log(`[Socket] activeGames Map size: ${activeGames.size}`);
+        console.log(`[Socket] activeGames Map keys: ${Array.from(activeGames.keys()).join(", ")}`);
+        
         try {
           const gameState = activeGames.get(data.gameId);
+          console.log(`[Socket] gameState found: ${!!gameState}`);
+          
           if (!gameState) {
-            console.log(`[Socket] Game ${data.gameId} not in activeGames map`);
+            console.log(`[Socket] ERROR: Game ${data.gameId} not in activeGames map`);
+            console.log(`[Socket] Available games: ${Array.from(activeGames.keys()).join(", ")}`);
             socket.emit("error", { message: "Game not active" });
             return;
           }
