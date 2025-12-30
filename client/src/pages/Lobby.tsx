@@ -52,30 +52,6 @@ export default function Lobby() {
     },
   });
 
-  useEffect(() => {
-    if (!loading && !user) {
-      setLocation("/");
-    }
-  }, [user, loading, setLocation]);
-
-  useEffect(() => {
-    if (!playerLoading && player === null) {
-      setLocation("/select-alias");
-    }
-  }, [player, playerLoading, setLocation]);
-
-  if (loading || playerLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <div className="text-white text-xl">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!player) {
-    return null;
-  }
-
   const joinQueue = trpc.matchmaking.join.useMutation({
     onSuccess: (data) => {
       if (data.matched) {
@@ -105,6 +81,30 @@ export default function Lobby() {
       setSearching(false);
     },
   });
+
+  useEffect(() => {
+    if (!loading && !user) {
+      setLocation("/");
+    }
+  }, [user, loading, setLocation]);
+
+  useEffect(() => {
+    if (!playerLoading && player === null) {
+      setLocation("/select-alias");
+    }
+  }, [player, playerLoading, setLocation]);
+
+  if (loading || playerLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!player) {
+    return null;
+  }
 
   const handleQuickPlay = () => {
     setSearching(true);
