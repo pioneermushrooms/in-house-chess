@@ -94,10 +94,19 @@ export default function Game() {
       toast.error(data.message);
     });
 
+    // Listen for player join events
+    socket.on("player_joined", (data: { playerCount: number; bothPlayersPresent: boolean }) => {
+      console.log("Player joined:", data);
+      if (data.bothPlayersPresent) {
+        toast.success("Both players are now in the game!");
+      }
+    });
+
     return () => {
       socket.off("game_state");
       socket.off("move_made");
       socket.off("clock_update");
+      socket.off("player_joined");
       socket.off("game_ended");
       socket.off("draw_offered");
       socket.off("error");
@@ -172,8 +181,25 @@ export default function Game() {
                     {isWhite ? "B" : "W"}
                   </div>
                   <div>
-                    <div className="text-white font-medium">Opponent</div>
-                    <div className="text-sm text-slate-400">Rating: 1200</div>
+                    {isWhite ? (
+                      game.blackPlayer ? (
+                        <>
+                          <div className="text-white font-medium">{game.blackPlayer.alias}</div>
+                          <div className="text-sm text-slate-400">Rating: {game.blackPlayer.rating}</div>
+                        </>
+                      ) : (
+                        <div className="text-slate-400 font-medium">Waiting for opponent...</div>
+                      )
+                    ) : (
+                      game.whitePlayer ? (
+                        <>
+                          <div className="text-white font-medium">{game.whitePlayer.alias}</div>
+                          <div className="text-sm text-slate-400">Rating: {game.whitePlayer.rating}</div>
+                        </>
+                      ) : (
+                        <div className="text-slate-400 font-medium">Waiting for opponent...</div>
+                      )
+                    )}
                   </div>
                 </div>
                 <div className="text-2xl font-mono text-white">

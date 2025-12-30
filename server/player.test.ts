@@ -33,10 +33,11 @@ function createAuthContext(userId: number = 1): { ctx: TrpcContext } {
 
 describe("player.create", () => {
   it("creates a new player profile with unique alias", async () => {
-    const { ctx } = createAuthContext(999);
+    const userId = Math.floor(Math.random() * 1000000) + 10000;
+    const { ctx } = createAuthContext(userId);
     const caller = appRouter.createCaller(ctx);
 
-    const alias = `TestPlayer${Date.now()}`;
+    const alias = `TestPlayer${Date.now()}_${userId}`;
     const player = await caller.player.create({ alias });
 
     expect(player).toBeDefined();
@@ -48,13 +49,15 @@ describe("player.create", () => {
   });
 
   it("rejects duplicate alias", async () => {
-    const { ctx: ctx1 } = createAuthContext(1001);
+    const userId1 = Math.floor(Math.random() * 1000000) + 20000;
+    const userId2 = Math.floor(Math.random() * 1000000) + 30000;
+    const { ctx: ctx1 } = createAuthContext(userId1);
     const caller1 = appRouter.createCaller(ctx1);
 
-    const alias = `DuplicateTest${Date.now()}`;
+    const alias = `DuplicateTest${Date.now()}_${userId1}`;
     await caller1.player.create({ alias });
 
-    const { ctx: ctx2 } = createAuthContext(1002);
+    const { ctx: ctx2 } = createAuthContext(userId2);
     const caller2 = appRouter.createCaller(ctx2);
 
     await expect(caller2.player.create({ alias })).rejects.toThrow(
@@ -63,7 +66,8 @@ describe("player.create", () => {
   });
 
   it("rejects alias that is too short", async () => {
-    const { ctx } = createAuthContext(1003);
+    const userId = Math.floor(Math.random() * 1000000) + 40000;
+    const { ctx } = createAuthContext(userId);
     const caller = appRouter.createCaller(ctx);
 
     await expect(caller.player.create({ alias: "ab" })).rejects.toThrow();
@@ -72,7 +76,8 @@ describe("player.create", () => {
 
 describe("player.getOrCreate", () => {
   it("returns null when player does not exist", async () => {
-    const { ctx } = createAuthContext(2000);
+    const userId = Math.floor(Math.random() * 1000000) + 50000;
+    const { ctx } = createAuthContext(userId);
     const caller = appRouter.createCaller(ctx);
 
     const player = await caller.player.getOrCreate();
@@ -80,10 +85,11 @@ describe("player.getOrCreate", () => {
   });
 
   it("returns existing player profile", async () => {
-    const { ctx } = createAuthContext(2001);
+    const userId = Math.floor(Math.random() * 1000000) + 60000;
+    const { ctx } = createAuthContext(userId);
     const caller = appRouter.createCaller(ctx);
 
-    const alias = `ExistingPlayer${Date.now()}`;
+    const alias = `ExistingPlayer${Date.now()}_${userId}`;
     await caller.player.create({ alias });
 
     const player = await caller.player.getOrCreate();

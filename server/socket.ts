@@ -94,6 +94,16 @@ export function setupSocketIO(httpServer: HTTPServer) {
 
         socket.join(`game_${data.gameId}`);
 
+        // Check how many players are in the room
+        const room = io.sockets.adapter.rooms.get(`game_${data.gameId}`);
+        const playerCount = room ? room.size : 0;
+
+        // Notify all players about the player count
+        io.to(`game_${data.gameId}`).emit("player_joined", {
+          playerCount,
+          bothPlayersPresent: playerCount >= 2,
+        });
+
         // Initialize or restore game state
         let gameState = activeGames.get(data.gameId);
         if (!gameState && game.status === "active") {

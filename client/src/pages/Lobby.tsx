@@ -24,7 +24,15 @@ export default function Lobby() {
 
   const createGame = trpc.game.create.useMutation({
     onSuccess: (data) => {
-      toast.success(`Game created! Invite code: ${data.inviteCode}`);
+      const inviteLink = `${window.location.origin}/game/${data.gameId}`;
+      
+      // Copy invite link to clipboard
+      navigator.clipboard.writeText(inviteLink).then(() => {
+        toast.success(`Game created! Invite link copied to clipboard`);
+      }).catch(() => {
+        toast.success(`Game created! Share this link: ${inviteLink}`);
+      });
+      
       setLocation(`/game/${data.gameId}`);
     },
     onError: (error) => {

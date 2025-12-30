@@ -78,3 +78,10 @@
 - [x] Fix React setState error in Home component redirect (wrap setLocation in useEffect)
 - [x] Fix React hooks error in Lobby component (move all hooks before conditional returns)
 - [x] Fix SelectAlias page to check for existing player and redirect to lobby
+
+## UX Improvements
+- [x] Show actual player aliases in game interface (fetch player data for both white and black)
+- [x] Auto-copy invite link to clipboard when creating game
+- [x] Show waiting room UI when only one player has joined
+- [x] Add player join notifications via WebSocket
+- [ ] Auto-start game when second player joins (game starts when white makes first move)

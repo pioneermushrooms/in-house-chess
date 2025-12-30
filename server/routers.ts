@@ -197,7 +197,7 @@ export const appRouter = router({
         return { gameId: game.id };
       }),
 
-    // Get game by ID
+    // Get game by ID with player data
     getById: protectedProcedure
       .input(z.object({ gameId: z.number() }))
       .query(async ({ input }) => {
@@ -205,7 +205,16 @@ export const appRouter = router({
         if (!game) {
           throw new Error("Game not found");
         }
-        return game;
+
+        // Fetch player data
+        const whitePlayer = game.whitePlayerId ? await db.getPlayerById(game.whitePlayerId) : null;
+        const blackPlayer = game.blackPlayerId ? await db.getPlayerById(game.blackPlayerId) : null;
+
+        return {
+          ...game,
+          whitePlayer,
+          blackPlayer,
+        };
       }),
   }),
 });

@@ -110,6 +110,13 @@ export async function getPlayerByAlias(alias: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function getPlayerById(playerId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(players).where(eq(players.id, playerId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
 export async function createPlayer(data: InsertPlayer) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
