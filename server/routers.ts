@@ -1,14 +1,45 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+import { sdk } from "./_core/sdk";
 
 export const appRouter = router({
-    // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({
+    /**
+     * Guest login - create a session without OAuth
+     */
+    guestLogin: publicProcedure
+      .input(z.object({ username: z.string().min(1).max(50) }))
+      .mutation(async ({ input, ctx }) => {
+        const { username } = input;
+        // Create a guest openId based on username
+        const guestOpenId = `guest_${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+        
+        // Create or update guest user
+        await db.upsertUser({
+          openId: guestOpenId,
+          name: username,
+          email: null,
+          loginMethod: 'guest',
+          lastSignedIn: new Date(),
+        });
+        
+        // Create session token
+        const sessionToken = await sdk.createSessionToken(guestOpenId, {
+          name: username,
+          expiresInMs: ONE_YEAR_MS,
+        });
+        
+        // Set cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+        
+        return { success: true, username };
+      }),
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);

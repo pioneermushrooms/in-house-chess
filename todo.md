@@ -199,3 +199,12 @@
 - [x] Create GitHub repository: https://github.com/pioneermushrooms/in-house-chess
 - [x] Push code to GitHub (all 302 objects pushed successfully)
 - [x] Provide Railway connection instructions
+
+## Make OAuth Optional - Guest Username System
+- [x] Update OAuth initialization to be optional
+- [x] Implement guest username authentication
+- [x] Create useAuth hook to support guest mode
+- [x] Update Home page with guest login form
+- [x] Test authentication flow in dev
+- [ ] Push changes to GitHub
+- [ ] Verify Railway auto-deployment

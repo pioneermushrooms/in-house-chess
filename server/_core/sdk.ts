@@ -29,12 +29,11 @@ const GET_USER_INFO_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserInfo`;
 const GET_USER_INFO_WITH_JWT_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserInfoWithJwt`;
 
 class OAuthService {
-  constructor(private client: ReturnType<typeof axios.create>) {
-    console.log("[OAuth] Initialized with baseURL:", ENV.oAuthServerUrl);
-    if (!ENV.oAuthServerUrl) {
-      console.error(
-        "[OAuth] ERROR: OAUTH_SERVER_URL is not configured! Set OAUTH_SERVER_URL environment variable."
-      );
+  constructor(private client: ReturnType<typeof axios.create> | null) {
+    if (ENV.oAuthServerUrl) {
+      console.log("[OAuth] Initialized with baseURL:", ENV.oAuthServerUrl);
+    } else {
+      console.log("[OAuth] Running in guest mode - OAuth disabled");
     }
   }
 
@@ -47,6 +46,9 @@ class OAuthService {
     code: string,
     state: string
   ): Promise<ExchangeTokenResponse> {
+    if (!this.client) {
+      throw new Error("OAuth is not configured");
+    }
     const payload: ExchangeTokenRequest = {
       clientId: ENV.appId,
       grantType: "authorization_code",
@@ -54,7 +56,7 @@ class OAuthService {
       redirectUri: this.decodeState(state),
     };
 
-    const { data } = await this.client.post<ExchangeTokenResponse>(
+    const { data} = await this.client.post<ExchangeTokenResponse>(
       EXCHANGE_TOKEN_PATH,
       payload
     );
@@ -65,6 +67,9 @@ class OAuthService {
   async getUserInfoByToken(
     token: ExchangeTokenResponse
   ): Promise<GetUserInfoResponse> {
+    if (!this.client) {
+      throw new Error("OAuth is not configured");
+    }
     const { data } = await this.client.post<GetUserInfoResponse>(
       GET_USER_INFO_PATH,
       {
@@ -76,18 +81,24 @@ class OAuthService {
   }
 }
 
-const createOAuthHttpClient = (): AxiosInstance =>
-  axios.create({
+const createOAuthHttpClient = (): AxiosInstance | null => {
+  if (!ENV.oAuthServerUrl) {
+    return null;
+  }
+  return axios.create({
     baseURL: ENV.oAuthServerUrl,
     timeout: AXIOS_TIMEOUT_MS,
   });
+};
 
 class SDKServer {
-  private readonly client: AxiosInstance;
+  private readonly client: AxiosInstance | null;
   private readonly oauthService: OAuthService;
+  private readonly isOAuthEnabled: boolean;
 
-  constructor(client: AxiosInstance = createOAuthHttpClient()) {
+  constructor(client: AxiosInstance | null = createOAuthHttpClient()) {
     this.client = client;
+    this.isOAuthEnabled = client !== null;
     this.oauthService = new OAuthService(this.client);
   }
 
@@ -235,6 +246,9 @@ class SDKServer {
   async getUserInfoWithJwt(
     jwtToken: string
   ): Promise<GetUserInfoWithJwtResponse> {
+    if (!this.client) {
+      throw new Error("OAuth is not configured");
+    }
     const payload: GetUserInfoWithJwtRequest = {
       jwtToken,
       projectId: ENV.appId,
@@ -270,8 +284,8 @@ class SDKServer {
     const signedInAt = new Date();
     let user = await db.getUserByOpenId(sessionUserId);
 
-    // If user not in DB, sync from OAuth server automatically
-    if (!user) {
+    // If user not in DB, sync from OAuth server automatically (only if OAuth is enabled)
+    if (!user && this.isOAuthEnabled) {
       try {
         const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
         await db.upsertUser({

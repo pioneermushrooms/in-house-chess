@@ -10,6 +10,12 @@ function getQueryParam(req: Request, key: string): string | undefined {
 }
 
 export function registerOAuthRoutes(app: Express) {
+  // Only register OAuth routes if OAuth is configured
+  if (!process.env.OAUTH_SERVER_URL) {
+    console.log("[OAuth] OAuth routes disabled - running in guest mode");
+    return;
+  }
+  
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
