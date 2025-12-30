@@ -29,6 +29,12 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      external: ["jose", "crypto"],
+    },
+  },
+  optimizeDeps: {
+    exclude: ["jose"],
   },
   server: {
     host: true,
