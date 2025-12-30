@@ -15,6 +15,7 @@ export default function Lobby() {
   const { user, loading } = useAuth();
   const [, setLocation] = useLocation();
   const [inviteCode, setInviteCode] = useState("");
+  const [searching, setSearching] = useState(false);
 
   const { data: player, isLoading: playerLoading } = trpc.player.getOrCreate.useQuery(
     undefined,
@@ -75,8 +76,44 @@ export default function Lobby() {
     return null;
   }
 
+  const joinQueue = trpc.matchmaking.join.useMutation({
+    onSuccess: (data) => {
+      if (data.matched) {
+        toast.success("Match found!");
+        setSearching(false);
+        setLocation(`/game/${data.gameId}`);
+      } else {
+        // Still searching
+        toast.info("Searching for opponent...");
+        // Poll for matches every 2 seconds
+        setTimeout(() => {
+          if (searching) {
+            joinQueue.mutate({ timeControl: "10+0" });
+          }
+        }, 2000);
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message);
+      setSearching(false);
+    },
+  });
+
+  const leaveQueue = trpc.matchmaking.leave.useMutation({
+    onSuccess: () => {
+      toast.info("Cancelled matchmaking");
+      setSearching(false);
+    },
+  });
+
   const handleQuickPlay = () => {
-    toast.info("Matchmaking feature coming soon");
+    setSearching(true);
+    joinQueue.mutate({ timeControl: "10+0" });
+  };
+
+  const handleCancelSearch = () => {
+    setSearching(false);
+    leaveQueue.mutate();
   };
 
   const handleCreateGame = () => {
@@ -164,13 +201,23 @@ export default function Lobby() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button
-                      onClick={handleQuickPlay}
-                      className="w-full bg-blue-600 hover:bg-blue-700"
-                      size="lg"
-                    >
-                      Find Match
-                    </Button>
+                    {searching ? (
+                      <Button
+                        onClick={handleCancelSearch}
+                        className="w-full bg-red-600 hover:bg-red-700"
+                        size="lg"
+                      >
+                        Cancel Search
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={handleQuickPlay}
+                        className="w-full bg-blue-600 hover:bg-blue-700"
+                        size="lg"
+                      >
+                        Find Match
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
 

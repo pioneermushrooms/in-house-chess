@@ -228,6 +228,89 @@ export const appRouter = router({
         };
       }),
   }),
+
+  // Matchmaking router
+  matchmaking: router({
+    // Join matchmaking queue
+    join: protectedProcedure
+      .input(z.object({ timeControl: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const player = await db.getPlayerByUserId(ctx.user.id);
+        if (!player) {
+          throw new Error("Player profile not found");
+        }
+
+        // Add to queue
+        await db.addToMatchmakingQueue({
+          playerId: player.id,
+          rating: player.rating,
+          timeControl: input.timeControl,
+        });
+
+        // Try to find a match immediately
+        const opponent = await db.findMatchmakingOpponent(input.timeControl, player.rating, player.id);
+        
+        if (opponent) {
+          // Remove both players from queue
+          await db.removeFromMatchmakingQueue(player.id);
+          await db.removeFromMatchmakingQueue(opponent.playerId);
+
+          // Randomly assign colors
+          const [whitePlayerId, blackPlayerId] = Math.random() < 0.5 
+            ? [player.id, opponent.playerId] 
+            : [opponent.playerId, player.id];
+
+          // Parse time control (e.g., "10+0" -> 10 minutes, 0 increment)
+          const [initialMinutes, increment] = input.timeControl.split("+").map(Number);
+          const initialTime = initialMinutes * 60; // Convert to seconds
+
+          // Create game
+          const gameId = await db.createGame({
+            whitePlayerId,
+            blackPlayerId,
+            timeControl: input.timeControl,
+            initialTime,
+            increment,
+            currentFen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            moveList: "[]",
+            status: "active",
+            whiteTimeRemaining: initialTime * 1000,
+            blackTimeRemaining: initialTime * 1000,
+            isRated: 1,
+          });
+
+          return { matched: true, gameId, opponentId: opponent.playerId };
+        }
+
+        return { matched: false };
+      }),
+
+    // Leave matchmaking queue
+    leave: protectedProcedure.mutation(async ({ ctx }) => {
+      const player = await db.getPlayerByUserId(ctx.user.id);
+      if (!player) {
+        throw new Error("Player profile not found");
+      }
+
+      await db.removeFromMatchmakingQueue(player.id);
+      return { success: true };
+    }),
+
+    // Check queue status
+    status: protectedProcedure.query(async ({ ctx }) => {
+      const player = await db.getPlayerByUserId(ctx.user.id);
+      if (!player) {
+        return { inQueue: false };
+      }
+
+      const entry = await db.getMatchmakingQueueEntry(player.id);
+      return { 
+        inQueue: !!entry,
+        timeControl: entry?.timeControl,
+        joinedAt: entry?.joinedAt,
+      };
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

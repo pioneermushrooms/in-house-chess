@@ -138,3 +138,11 @@
 - [x] Add move list display
 - [x] Add reset board button
 - [x] Add Practice Mode button to Lobby
+
+## Fix Real-Time Two-Player Gameplay
+- [ ] Debug why moves don't sync between players
+- [ ] Verify socket room membership when both players join
+- [ ] Ensure game_state event sends complete data to both players
+- [ ] Fix move_made event broadcasting
+- [x] Fix game status check to allow moves in waiting/active states
+- [ ] Test complete flow: create → join → both players make moves

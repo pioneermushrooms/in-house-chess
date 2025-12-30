@@ -206,6 +206,15 @@ export async function removeFromMatchmakingQueue(playerId: number) {
   await db.delete(matchmakingQueue).where(eq(matchmakingQueue.playerId, playerId));
 }
 
+export async function getMatchmakingQueueEntry(playerId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(matchmakingQueue)
+    .where(eq(matchmakingQueue.playerId, playerId))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
 export async function findMatchmakingOpponent(timeControl: string, rating: number, playerId: number) {
   const db = await getDb();
   if (!db) return undefined;

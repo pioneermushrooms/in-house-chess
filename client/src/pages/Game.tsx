@@ -136,7 +136,10 @@ export default function Game() {
     console.log(`[Client] onDrop called: ${sourceSquare} -> ${targetSquare}, piece:`, piece);
     console.log(`[Client] Socket connected: ${!!socket}, Game status: ${gameStatus}`);
     
-    if (!socket || gameStatus !== "active" || !targetSquare) {
+    // Allow moves if socket is connected and game is not completed
+    const canMove = socket && gameStatus !== "completed" && gameStatus !== "abandoned" && targetSquare;
+    
+    if (!canMove) {
       console.log(`[Client] Move rejected - socket: ${!!socket}, status: ${gameStatus}, target: ${targetSquare}`);
       return false;
     }
