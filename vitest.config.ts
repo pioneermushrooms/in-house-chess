@@ -1,7 +1,11 @@
 import { defineConfig } from "vitest/config";
 import path from "path";
+import { fileURLToPath } from "url";
 
-const templateRoot = path.resolve(import.meta.dirname);
+// Get __dirname equivalent in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const templateRoot = path.resolve(__dirname);
 
 export default defineConfig({
   root: templateRoot,
