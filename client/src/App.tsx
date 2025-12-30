@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import SelectAlias from "./pages/SelectAlias";
 import Lobby from "./pages/Lobby";
 import Game from "./pages/Game";
+import Practice from "./pages/Practice";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -16,6 +17,7 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/select-alias"} component={SelectAlias} />
       <Route path={"/lobby"} component={Lobby} />
+      <Route path={"/practice"} component={Practice} />
       <Route path={"/game/:gameId"} component={Game} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

@@ -223,6 +223,24 @@ export default function Lobby() {
                     </Button>
                   </CardContent>
                 </Card>
+
+                <Card className="bg-slate-800/50 border-slate-700">
+                  <CardHeader>
+                    <CardTitle className="text-white">Practice Mode</CardTitle>
+                    <CardDescription className="text-slate-400">
+                      Play both sides to practice moves
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button
+                      onClick={() => setLocation("/practice")}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      Start Practice
+                    </Button>
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="history">

@@ -120,3 +120,21 @@
 - [x] Fix client useEffect dependencies causing listener churn
 - [x] Add comprehensive logging at each step
 - [ ] Test complete flow: create → join → move → move
+
+## Quick Play Matchmaking
+- [ ] Implement backend matchmaking queue management (add, remove, find match)
+- [ ] Create matchmaking pairing algorithm based on rating proximity
+- [ ] Add tRPC procedures for joining/leaving queue
+- [ ] Build frontend Quick Play UI with searching status
+- [ ] Add WebSocket event for match found notification
+- [ ] Implement automatic game creation when match is found
+- [ ] Add cancel search functionality
+- [ ] Test matchmaking with multiple players
+
+## Practice Mode
+- [x] Create Practice page with local chess board
+- [x] Allow moving both white and black pieces
+- [x] Enforce chess rules with chess.js
+- [x] Add move list display
+- [x] Add reset board button
+- [x] Add Practice Mode button to Lobby
