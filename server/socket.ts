@@ -83,13 +83,28 @@ export function setupSocketIO(httpServer: HTTPServer) {
           return;
         }
 
-        // Verify player is part of this game
-        if (
-          game.whitePlayerId !== socket.playerId &&
-          game.blackPlayerId !== socket.playerId
-        ) {
+        // Verify player is part of this game or can join
+        const isWhitePlayer = game.whitePlayerId === socket.playerId;
+        const isBlackPlayer = game.blackPlayerId === socket.playerId;
+        const canJoinAsBlack = game.blackPlayerId === null && game.whitePlayerId !== socket.playerId;
+        
+        if (!isWhitePlayer && !isBlackPlayer && !canJoinAsBlack) {
           socket.emit("error", { message: "Not authorized for this game" });
           return;
+        }
+        
+        // If player is joining as black for the first time, assign them
+        if (canJoinAsBlack && game.status === "waiting") {
+          await updateGame(data.gameId, {
+            blackPlayerId: socket.playerId,
+            status: "active",
+            startedAt: new Date(),
+          });
+          // Refresh game data
+          const updatedGame = await getGameById(data.gameId);
+          if (updatedGame) {
+            Object.assign(game, updatedGame);
+          }
         }
 
         socket.join(`game_${data.gameId}`);

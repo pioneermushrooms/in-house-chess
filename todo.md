@@ -85,3 +85,5 @@
 - [x] Show waiting room UI when only one player has joined
 - [x] Add player join notifications via WebSocket
 - [ ] Auto-start game when second player joins (game starts when white makes first move)
+- [x] Fix WebSocket error handling to show actual error messages instead of [object Object]
+- [x] Fix socket connection errors - allow second player to join game and auto-assign as black player

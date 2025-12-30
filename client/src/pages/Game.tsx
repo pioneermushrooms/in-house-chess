@@ -91,7 +91,9 @@ export default function Game() {
 
     // Listen for errors
     socket.on("error", (data: any) => {
-      toast.error(data.message);
+      const errorMessage = typeof data === 'string' ? data : (data?.message || JSON.stringify(data));
+      console.error("Socket error:", data);
+      toast.error(`Error: ${errorMessage}`);
     });
 
     // Listen for player join events
