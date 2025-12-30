@@ -140,8 +140,8 @@ export const appRouter = router({
 
         const gameId = await db.createGame({
           inviteCode,
-          whitePlayerId: null,
-          blackPlayerId: null,
+          whitePlayerId: player.id, // Creator is white
+          blackPlayerId: null, // Waiting for opponent
           timeControl: input.timeControl,
           initialTime: input.initialTime,
           increment: input.increment,

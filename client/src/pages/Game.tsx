@@ -44,10 +44,12 @@ export default function Game() {
     if (!socket || !connected) return;
 
     // Join the game room
+    console.log(`[Client] Joining game ${gameId}`);
     socket.emit("join_game", { gameId });
 
     // Listen for game state
     socket.on("game_state", (data: any) => {
+      console.log("[Client] Received game_state:", data);
       chess.load(data.fen);
       setFen(data.fen);
       setMoveList(data.moveList || []);
@@ -60,6 +62,7 @@ export default function Game() {
 
     // Listen for moves
     socket.on("move_made", (data: any) => {
+      console.log("[Client] Received move_made:", data);
       chess.load(data.fen);
       setFen(data.fen);
       setMoveList((prev) => [...prev, data.move]);
@@ -109,10 +112,10 @@ export default function Game() {
       console.error("Socket error:", data);
       toast.error(`Error: ${errorMessage}`);
     });
-
-    // Listen for player join events
-    socket.on("player_joined", (data: { playerCount: number; bothPlayersPresent: boolean }) => {
-      console.log("Player joined:", data);
+    
+    // Listen for player joined
+    socket.on("player_joined", (data: any) => {
+      console.log("[Client] Received player_joined:", data);
       if (data.bothPlayersPresent) {
         toast.success("Both players are now in the game!");
       }
@@ -127,17 +130,29 @@ export default function Game() {
       socket.off("draw_offered");
       socket.off("error");
     };
-  }, [socket, connected, gameId, chess, setLocation]);
+  }, [socket, connected, gameId, setLocation]); // chess is intentionally excluded - it's a stable ref
 
-  const onDrop = ({ piece, sourceSquare, targetSquare }: any) => {
-    if (!socket || gameStatus !== "active" || !targetSquare) return false;
-
+  const onDrop = ({ sourceSquare, targetSquare, piece }: any) => {
+    console.log(`[Client] onDrop called: ${sourceSquare} -> ${targetSquare}, piece:`, piece);
+    console.log(`[Client] Socket connected: ${!!socket}, Game status: ${gameStatus}`);
+    
+    if (!socket || gameStatus !== "active" || !targetSquare) {
+      console.log(`[Client] Move rejected - socket: ${!!socket}, status: ${gameStatus}, target: ${targetSquare}`);
+      return false;
+    }
     // Check if it's a pawn promotion
-    const pieceType = piece.pieceType;
+    const pieceType = piece;
     const isPromotion =
       (pieceType === "wP" && targetSquare[1] === "8") ||
       (pieceType === "bP" && targetSquare[1] === "1");
 
+    console.log(`[Client] Emitting make_move:`, {
+      gameId,
+      from: sourceSquare,
+      to: targetSquare,
+      promotion: isPromotion ? "q" : undefined,
+    });
+    
     socket.emit("make_move", {
       gameId,
       from: sourceSquare,
@@ -182,6 +197,10 @@ export default function Game() {
   const isWhite = game.whitePlayerId === player.id;
   const isBlack = game.blackPlayerId === player.id;
   const boardOrientation = isWhite ? "white" : "black";
+  
+  console.log(`[Client] Player assignment - Player ID: ${player.id}, White ID: ${game.whitePlayerId}, Black ID: ${game.blackPlayerId}`);
+  console.log(`[Client] You are playing as: ${isWhite ? 'WHITE' : isBlack ? 'BLACK' : 'SPECTATOR'}`);
+  console.log(`[Client] Board orientation: ${boardOrientation}`);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
@@ -252,12 +271,14 @@ export default function Game() {
             <Card className="bg-slate-800/50 border-slate-700">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
-                    {isWhite ? "W" : "B"}
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${isWhite ? 'bg-white text-black' : 'bg-black'}`}>
+                    {isWhite ? "♔" : "♚"}
                   </div>
                   <div>
                     <div className="text-white font-medium">{player.alias} (You)</div>
-                    <div className="text-sm text-slate-400">Rating: {player.rating}</div>
+                    <div className="text-sm text-slate-400">
+                      Playing as {isWhite ? 'White' : 'Black'} • Rating: {player.rating}
+                    </div>
                   </div>
                 </div>
                 <div className="text-2xl font-mono text-white">

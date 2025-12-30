@@ -74,11 +74,14 @@ export function setupSocketIO(httpServer: HTTPServer) {
   io.on("connection", (socket: AuthenticatedSocket) => {
     console.log(`Player ${socket.playerId} connected`);
 
-    // Join a game room
-    socket.on("join_game", async (data: { gameId: number }) => {
-      try {
-        const game = await getGameById(data.gameId);
-        if (!game) {
+    // Join game
+    socket.on(
+      "join_game",
+      async (data: { gameId: number }) => {
+        console.log(`[Socket] Player ${socket.playerId} attempting to join game ${data.gameId}`);
+        try {
+          const game = await getGameById(data.gameId);
+          if (!game) {
           socket.emit("error", { message: "Game not found" });
           return;
         }
@@ -108,52 +111,78 @@ export function setupSocketIO(httpServer: HTTPServer) {
         }
 
         socket.join(`game_${data.gameId}`);
+        console.log(`[Socket] Player ${socket.playerId} joined room game_${data.gameId}`);
 
         // Check how many players are in the room
         const room = io.sockets.adapter.rooms.get(`game_${data.gameId}`);
         const playerCount = room ? room.size : 0;
+        console.log(`[Socket] Room game_${data.gameId} now has ${playerCount} players`);
 
+        // Refresh game data before notifying
+        const currentGame = await getGameById(data.gameId);
+        
         // Notify all players about the player count
         io.to(`game_${data.gameId}`).emit("player_joined", {
           playerCount,
           bothPlayersPresent: playerCount >= 2,
+          whitePlayerId: currentGame?.whitePlayerId,
+          blackPlayerId: currentGame?.blackPlayerId,
         });
+        console.log(`[Socket] Emitted player_joined event to room game_${data.gameId}`);
 
         // Initialize or restore game state
+        // ALWAYS refresh game data to get latest player assignments
+        const latestGame = await getGameById(data.gameId);
+        if (!latestGame) {
+          socket.emit("error", { message: "Game not found" });
+          return;
+        }
+        
         let gameState = activeGames.get(data.gameId);
-        if (!gameState && game.status === "active") {
-          const chess = new Chess(game.currentFen);
-          const moveList = game.moveList ? JSON.parse(game.moveList) : [];
+        
+        // Create activeGames entry if game has both players (active or waiting with both assigned)
+        const hasBothPlayers = latestGame.whitePlayerId && latestGame.blackPlayerId;
+        
+        if (!gameState && hasBothPlayers) {
+          console.log(`[Socket] Creating activeGames entry for game ${data.gameId}`);
+          const chess = new Chess(latestGame.currentFen);
+          const moveList = latestGame.moveList ? JSON.parse(latestGame.moveList) : [];
           const hasStarted = moveList.length > 0;
           
           gameState = {
             gameId: data.gameId,
             chess,
-            whitePlayerId: game.whitePlayerId!,
-            blackPlayerId: game.blackPlayerId!,
-            whiteTimeRemaining: game.whiteTimeRemaining!,
-            blackTimeRemaining: game.blackTimeRemaining!,
+            whitePlayerId: latestGame.whitePlayerId!,
+            blackPlayerId: latestGame.blackPlayerId!,
+            whiteTimeRemaining: latestGame.whiteTimeRemaining!,
+            blackTimeRemaining: latestGame.blackTimeRemaining!,
             lastMoveTime: Date.now(),
             currentTurn: chess.turn() === "w" ? "white" : "black",
           };
           activeGames.set(data.gameId, gameState);
+          console.log(`[Socket] activeGames created - White: ${gameState.whitePlayerId}, Black: ${gameState.blackPlayerId}`);
           
           // Only start clock if game has actually started (moves have been made)
           if (hasStarted) {
             startGameClock(data.gameId, gameState, io);
           }
+        } else if (gameState) {
+          console.log(`[Socket] activeGames already exists for game ${data.gameId}`);
+        } else {
+          console.log(`[Socket] Game ${data.gameId} waiting for second player`);
         }
 
         // Send current game state
         socket.emit("game_state", {
-          fen: game.currentFen,
-          moveList: game.moveList ? JSON.parse(game.moveList) : [],
-          whiteTimeRemaining: game.whiteTimeRemaining,
-          blackTimeRemaining: game.blackTimeRemaining,
-          status: game.status,
-          result: game.result,
-          endReason: game.endReason,
+          fen: latestGame.currentFen,
+          moveList: latestGame.moveList ? JSON.parse(latestGame.moveList) : [],
+          whiteTimeRemaining: latestGame.whiteTimeRemaining,
+          blackTimeRemaining: latestGame.blackTimeRemaining,
+          status: latestGame.status,
+          result: latestGame.result,
+          endReason: latestGame.endReason,
         });
+        console.log(`[Socket] Sent game_state to player ${socket.playerId}`);
       } catch (error) {
         console.error("Error joining game:", error);
         socket.emit("error", { message: "Failed to join game" });
@@ -164,9 +193,11 @@ export function setupSocketIO(httpServer: HTTPServer) {
     socket.on(
       "make_move",
       async (data: { gameId: number; from: string; to: string; promotion?: string }) => {
+        console.log(`[Socket] make_move from player ${socket.playerId}: ${data.from} -> ${data.to}`);
         try {
           const gameState = activeGames.get(data.gameId);
           if (!gameState) {
+            console.log(`[Socket] Game ${data.gameId} not in activeGames map`);
             socket.emit("error", { message: "Game not active" });
             return;
           }
@@ -174,8 +205,10 @@ export function setupSocketIO(httpServer: HTTPServer) {
           // Verify it's the player's turn
           const isWhiteTurn = gameState.chess.turn() === "w";
           const isPlayerWhite = socket.playerId === gameState.whitePlayerId;
+          console.log(`[Socket] Turn check - isWhiteTurn: ${isWhiteTurn}, isPlayerWhite: ${isPlayerWhite}, playerId: ${socket.playerId}, whiteId: ${gameState.whitePlayerId}, blackId: ${gameState.blackPlayerId}`);
 
           if (isWhiteTurn !== isPlayerWhite) {
+            console.log(`[Socket] Move rejected - not player's turn`);
             socket.emit("error", { message: "Not your turn" });
             return;
           }
@@ -260,6 +293,11 @@ export function setupSocketIO(httpServer: HTTPServer) {
           });
 
           // Broadcast move to all players in the game
+          const room = io.sockets.adapter.rooms.get(`game_${data.gameId}`);
+          const playerCount = room ? room.size : 0;
+          console.log(`[Socket] Broadcasting move_made to room game_${data.gameId} with ${playerCount} players`);
+          console.log(`[Socket] Move: ${move.san}, New FEN: ${gameState.chess.fen()}`);
+          
           io.to(`game_${data.gameId}`).emit("move_made", {
             move: move.san,
             fen: gameState.chess.fen(),
@@ -269,6 +307,7 @@ export function setupSocketIO(httpServer: HTTPServer) {
             result,
             endReason,
           });
+          console.log(`[Socket] move_made event emitted`);
         } catch (error) {
           console.error("Error making move:", error);
           socket.emit("error", { message: "Failed to make move" });

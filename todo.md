@@ -94,3 +94,29 @@
 - [x] Add sidebar showing current games in progress with click-to-join
 - [x] Add move sound effects (move, capture, check, game end)
 - [x] Show captured pieces display beside the board
+
+## WebSocket Connection Issues
+- [ ] Debug why second player isn't visible to first player
+- [ ] Fix move execution not working between two players
+- [ ] Verify both players are connecting to the same game room
+- [ ] Add console logging to track socket events
+- [ ] Test real-time move synchronization between two browsers
+- [ ] Fix player color assignment - creator should be white, joiner should be black
+- [ ] Fix board orientation to show player's color at bottom
+- [ ] Fix move permissions based on player color and turn
+- [ ] Fix second player (Black) not able to join game via invite code
+- [ ] Ensure Black player can make moves after joining
+- [ ] Fix Black player unable to make moves after White's first move
+- [ ] Check turn validation in make_move socket handler
+- [ ] Fix move_made event not broadcasting to other player
+- [ ] Ensure game state updates are sent to all players in the room
+- [ ] Fix Black player not seeing White's moves on their board
+
+## Systematic Rebuild - Real-Time Chess
+- [x] Verify join endpoint assigns black player correctly
+- [x] Verify both players join the same socket room
+- [x] Fix activeGames Map to populate when both players are assigned
+- [x] Verify move_made uses io.to() not socket.emit()
+- [x] Fix client useEffect dependencies causing listener churn
+- [x] Add comprehensive logging at each step
+- [ ] Test complete flow: create → join → move → move
