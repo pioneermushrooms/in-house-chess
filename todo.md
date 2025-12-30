@@ -169,3 +169,13 @@
 - [x] Ensure move_made events are broadcast to both players
 - [x] Fix Vite catch-all route intercepting Socket.IO connections
 - [x] Fix socket authentication using wrong cookie name (was 'manus-session', should be 'app_session_id')
+
+## Production WebSocket Connection Issue
+- [x] Investigate why WebSocket cannot connect to wss://chessclub-h3st3pok.manus.space/socket.io/
+- [x] Check if Socket.IO server is running in production
+- [x] Verify WebSocket proxy configuration in production environment
+- [x] Confirmed: Manus production hosting does not currently support WebSocket connections
+- [x] Created comprehensive deployment guide for local network (v1)
+- [x] Created deployment guide for external hosting platforms (v2)
+- [x] Created quick-start script for local deployment
+- [x] Documented all deployment options and troubleshooting
