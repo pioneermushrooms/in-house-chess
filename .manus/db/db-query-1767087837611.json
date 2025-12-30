@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, whitePlayerId, blackPlayerId, status, startedAt FROM games WHERE id = 30005",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CLnct8dkeNkwEf.d4aab037a1db --database H3ST3PoK7akrmaFC8LSYTs --execute SELECT id, whitePlayerId, blackPlayerId, status, startedAt FROM games WHERE id = 30005",
+  "rows": [
+    {
+      "id": "30005",
+      "whitePlayerId": "6",
+      "blackPlayerId": "NULL",
+      "status": "waiting",
+      "startedAt": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\twhitePlayerId\tblackPlayerId\tstatus\tstartedAt\n30005\t6\tNULL\twaiting\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 399
+}

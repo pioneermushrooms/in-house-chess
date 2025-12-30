@@ -43,7 +43,20 @@ export function setupSocketIO(httpServer: HTTPServer) {
   // Authentication middleware
   io.use(async (socket: AuthenticatedSocket, next) => {
     try {
-      const token = socket.handshake.auth.token;
+      // Extract session token from cookies
+      const cookies = socket.handshake.headers.cookie;
+      if (!cookies) {
+        return next(new Error("Authentication required"));
+      }
+      
+      // Parse cookie string to find session token
+      const cookieObj: Record<string, string> = {};
+      cookies.split(';').forEach(cookie => {
+        const [key, value] = cookie.trim().split('=');
+        if (key && value) cookieObj[key] = value;
+      });
+      
+      const token = cookieObj['manus-session'];
       if (!token) {
         return next(new Error("Authentication required"));
       }
@@ -142,6 +155,8 @@ export function setupSocketIO(httpServer: HTTPServer) {
         
         // Create activeGames entry if game has both players (active or waiting with both assigned)
         const hasBothPlayers = latestGame.whitePlayerId && latestGame.blackPlayerId;
+        console.log(`[Socket] hasBothPlayers check - White: ${latestGame.whitePlayerId}, Black: ${latestGame.blackPlayerId}, Result: ${hasBothPlayers}`);
+        console.log(`[Socket] gameState exists: ${!!gameState}`);
         
         if (!gameState && hasBothPlayers) {
           console.log(`[Socket] Creating activeGames entry for game ${data.gameId}`);

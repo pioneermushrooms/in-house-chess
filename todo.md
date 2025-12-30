@@ -146,3 +146,14 @@
 - [ ] Fix move_made event broadcasting
 - [x] Fix game status check to allow moves in waiting/active states
 - [ ] Test complete flow: create → join → both players make moves
+
+## Socket Connection Errors
+- [x] Check server logs to see actual error messages
+- [x] Debug why players can't join game 34 - Socket not connecting at all!
+- [x] Fix error logging to show actual error message instead of [object Object]
+- [ ] Fix socket authentication - token not being passed correctly
+- [ ] Test complete two-player game flow
+- [ ] Fix game status - game 30005 is "waiting" but should be "active" when both players join
+- [ ] Ensure activeGames Map is populated when game becomes active
+- [x] Fix socket authentication - session cookie is httpOnly and can't be read by client JS
+- [x] Change socket auth to use withCredentials and read cookie from server-side request headers
