@@ -437,3 +437,23 @@
 - [x] Revert previous change that started clock immediately
 - [x] Clock now starts when moveList.length === 1 (first move)
 - [x] Removed clock start when both players join
+
+
+## UI Redesign (V3.0) - CANCELLED
+- [x] Created sophisticated visual style with purple theme
+- [x] Updated global CSS with new color palette
+- [x] Redesigned Lobby page
+- [x] Previewed design
+- [x] User preferred original design - reverted all changes
+
+
+## Play vs Computer (V2.17)
+- [x] Add isComputerGame flag to games table
+- [x] Add difficulty level field (easy/medium/hard)
+- [x] Create AI move generation using chess.js (easy/medium/hard with minimax)
+- [x] Add "Play vs Computer" card in Lobby
+- [x] Implement computer move logic in socket handler (500ms delay for UX)
+- [x] Add difficulty selector UI (Easy/Medium/Hard)
+- [x] Add color selector UI (White/Black)
+- [x] Computer games are unrated
+- [x] Computer responds automatically after player moves

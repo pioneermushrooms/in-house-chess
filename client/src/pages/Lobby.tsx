@@ -77,6 +77,8 @@ export default function Lobby() {
   const [searching, setSearching] = useState(false);
   const [timeControl, setTimeControl] = useState("10+0");
   const [searchStartTime, setSearchStartTime] = useState<number | null>(null);
+  const [computerDifficulty, setComputerDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+  const [playerColor, setPlayerColor] = useState<'white' | 'black'>('white');
 
   const { data: player, isLoading: playerLoading, refetch: refetchPlayer } = trpc.player.getOrCreate.useQuery(
     undefined,
@@ -174,6 +176,16 @@ export default function Lobby() {
     },
   });
 
+  const createComputerGame = trpc.game.createComputerGame.useMutation({
+    onSuccess: (data) => {
+      toast.success("Computer game created!");
+      setLocation(`/game/${data.gameId}`);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   useEffect(() => {
     if (!loading && !user) {
       setLocation("/");
@@ -219,6 +231,19 @@ export default function Lobby() {
       timeControl,
       initialTime,
       increment,
+    });
+  };
+
+  const handlePlayComputer = () => {
+    const [minutes, increment] = timeControl.split("+").map(Number);
+    const initialTime = minutes * 60; // Convert to seconds
+    
+    createComputerGame.mutate({
+      timeControl,
+      initialTime,
+      increment,
+      difficulty: computerDifficulty,
+      playerColor,
     });
   };
 
@@ -417,18 +442,56 @@ export default function Lobby() {
 
                 <Card className="bg-slate-800/50 border-slate-700">
                   <CardHeader>
-                    <CardTitle className="text-white">Practice Mode</CardTitle>
+                    <CardTitle className="text-white">Play vs Computer</CardTitle>
                     <CardDescription className="text-slate-400">
-                      Play both sides to practice moves
+                      Challenge the AI at different difficulty levels
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-white">Difficulty</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { value: "easy", label: "Easy" },
+                          { value: "medium", label: "Medium" },
+                          { value: "hard", label: "Hard" },
+                        ].map((diff) => (
+                          <Button
+                            key={diff.value}
+                            onClick={() => setComputerDifficulty(diff.value as 'easy' | 'medium' | 'hard')}
+                            variant={computerDifficulty === diff.value ? "default" : "outline"}
+                            className={computerDifficulty === diff.value ? "bg-blue-600 hover:bg-blue-700" : ""}
+                            size="sm"
+                          >
+                            {diff.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white">Play as</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { value: "white", label: "White" },
+                          { value: "black", label: "Black" },
+                        ].map((color) => (
+                          <Button
+                            key={color.value}
+                            onClick={() => setPlayerColor(color.value as 'white' | 'black')}
+                            variant={playerColor === color.value ? "default" : "outline"}
+                            className={playerColor === color.value ? "bg-blue-600 hover:bg-blue-700" : ""}
+                            size="sm"
+                          >
+                            {color.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
                     <Button
-                      onClick={() => setLocation("/practice")}
-                      className="w-full"
-                      variant="outline"
+                      onClick={handlePlayComputer}
+                      className="w-full bg-blue-600 hover:bg-blue-700"
                     >
-                      Start Practice
+                      Play vs Computer
                     </Button>
                   </CardContent>
                 </Card>

@@ -206,6 +206,41 @@ export const appRouter = router({
   }),
 
   game: router({
+    // Create a new game vs computer
+    createComputerGame: protectedProcedure
+      .input(z.object({
+        timeControl: z.string(),
+        initialTime: z.number(),
+        increment: z.number(),
+        difficulty: z.enum(['easy', 'medium', 'hard']),
+        playerColor: z.enum(['white', 'black']),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const player = await db.getPlayerByUserId(ctx.user.id);
+        if (!player) {
+          throw new Error("Player profile not found");
+        }
+
+        const gameId = await db.createGame({
+          inviteCode: null,
+          whitePlayerId: input.playerColor === 'white' ? player.id : null,
+          blackPlayerId: input.playerColor === 'black' ? player.id : null,
+          timeControl: input.timeControl,
+          initialTime: input.initialTime,
+          increment: input.increment,
+          currentFen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+          moveList: "[]",
+          status: "active",
+          whiteTimeRemaining: input.initialTime * 1000,
+          blackTimeRemaining: input.initialTime * 1000,
+          isRated: 0, // Computer games are unrated
+          isComputerGame: 1,
+          computerDifficulty: input.difficulty,
+        });
+
+        return { gameId };
+      }),
+
     // Create a new game with invite code
     create: protectedProcedure
       .input(z.object({

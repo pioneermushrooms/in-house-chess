@@ -67,6 +67,8 @@ export const games = mysqlTable("games", {
   blackTimeRemaining: int("blackTimeRemaining"), // in milliseconds
   lastMoveAt: timestamp("lastMoveAt"),
   isRated: int("isRated").default(1).notNull(), // 1 for rated, 0 for unrated
+  isComputerGame: int("isComputerGame").default(0).notNull(), // 1 for vs computer, 0 for vs human
+  computerDifficulty: mysqlEnum("computerDifficulty", ["easy", "medium", "hard"]),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   startedAt: timestamp("startedAt"),
   endedAt: timestamp("endedAt"),

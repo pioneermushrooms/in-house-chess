@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE games ADD COLUMN isComputerGame INT NOT NULL DEFAULT 0, ADD COLUMN computerDifficulty ENUM('easy', 'medium', 'hard') NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CLnct8dkeNkwEf.d4aab037a1db --database H3ST3PoK7akrmaFC8LSYTs --execute ALTER TABLE games ADD COLUMN isComputerGame INT NOT NULL DEFAULT 0, ADD COLUMN computerDifficulty ENUM('easy', 'medium', 'hard') NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1255
+}

@@ -352,6 +352,87 @@ export function setupSocketIO(httpServer: HTTPServer) {
             endReason,
           });
           console.log(`[Socket] move_made event emitted`);
+
+          // If computer game and game still active, make computer move
+          if (game?.isComputerGame && status === "active") {
+            setTimeout(async () => {
+              try {
+                const { getComputerMove } = await import("./computerPlayer");
+                const computerMove = getComputerMove(
+                  gameState.chess.fen(),
+                  game.computerDifficulty as 'easy' | 'medium' | 'hard'
+                );
+
+                // Make computer move
+                const compMove = gameState.chess.move(computerMove);
+                if (!compMove) return;
+
+                // Update clock
+                const compNow = Date.now();
+                const compTimeElapsed = compNow - gameState.lastMoveTime;
+                const compIsWhiteTurn = !isWhiteTurn;
+
+                if (compIsWhiteTurn) {
+                  gameState.whiteTimeRemaining -= compTimeElapsed;
+                  gameState.whiteTimeRemaining += increment * 1000;
+                } else {
+                  gameState.blackTimeRemaining -= compTimeElapsed;
+                  gameState.blackTimeRemaining += increment * 1000;
+                }
+                gameState.lastMoveTime = compNow;
+                gameState.currentTurn = gameState.chess.turn() === "w" ? "white" : "black";
+
+                moveList.push(compMove.san);
+
+                // Check for game end
+                let compStatus = "active";
+                let compResult = null;
+                let compEndReason = null;
+
+                if (gameState.chess.isCheckmate()) {
+                  compStatus = "completed";
+                  compResult = compIsWhiteTurn ? "white_win" : "black_win";
+                  compEndReason = "checkmate";
+                  await endGame(data.gameId, gameState, compResult, compEndReason, io);
+                } else if (gameState.chess.isStalemate()) {
+                  compStatus = "completed";
+                  compResult = "draw";
+                  compEndReason = "stalemate";
+                  await endGame(data.gameId, gameState, compResult, compEndReason, io);
+                } else if (gameState.chess.isDraw()) {
+                  compStatus = "completed";
+                  compResult = "draw";
+                  compEndReason = "draw";
+                  await endGame(data.gameId, gameState, compResult, compEndReason, io);
+                }
+
+                // Update database
+                await updateGame(data.gameId, {
+                  currentFen: gameState.chess.fen(),
+                  moveList: JSON.stringify(moveList),
+                  whiteTimeRemaining: gameState.whiteTimeRemaining,
+                  blackTimeRemaining: gameState.blackTimeRemaining,
+                  lastMoveAt: new Date(),
+                  status: compStatus as any,
+                  result: compResult as any,
+                  endReason: compEndReason,
+                });
+
+                // Broadcast computer move
+                io.to(`game_${data.gameId}`).emit("move_made", {
+                  move: compMove.san,
+                  fen: gameState.chess.fen(),
+                  whiteTimeRemaining: gameState.whiteTimeRemaining,
+                  blackTimeRemaining: gameState.blackTimeRemaining,
+                  status: compStatus,
+                  result: compResult,
+                  endReason: compEndReason,
+                });
+              } catch (error) {
+                console.error("Error making computer move:", error);
+              }
+            }, 500); // Small delay for better UX
+          }
         } catch (error) {
           console.error("Error making move:", error);
           socket.emit("error", { message: "Failed to make move" });
