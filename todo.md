@@ -465,3 +465,12 @@
 - [x] Don't wait for second player in computer games
 - [x] Use placeholder ID (-1) for computer player
 - [x] Report bothPlayersPresent=true for computer games
+
+
+## Fix Pawn Promotion (V2.19)
+- [x] Pawn promotions not working (was hardcoded to queen)
+- [x] Add promotion dialog UI when pawn reaches final rank
+- [x] Allow selecting promotion piece (Queen/Rook/Bishop/Knight)
+- [x] Send promotion choice to server
+- [x] Dialog shows chess piece symbols (♕♖♗♘)
+- [x] Works in both player vs player and computer games

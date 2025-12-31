@@ -36,6 +36,7 @@ export default function Game() {
   const [chatInput, setChatInput] = useState("");
   const [viewingMoveIndex, setViewingMoveIndex] = useState<number | null>(null); // null = live position
   const [reviewChess] = useState(new Chess()); // Separate chess instance for review
+  const [promotionMove, setPromotionMove] = useState<{ from: string; to: string } | null>(null);
 
   const { data: game, isLoading } = trpc.game.getById.useQuery(
     { gameId: gameId! },
@@ -197,21 +198,45 @@ export default function Game() {
       (pieceType === "wP" && targetSquare[1] === "8") ||
       (pieceType === "bP" && targetSquare[1] === "1");
 
+    if (isPromotion) {
+      // Show promotion dialog
+      setPromotionMove({ from: sourceSquare, to: targetSquare });
+      return true;
+    }
+
     console.log(`[Client] Emitting make_move:`, {
       gameId,
       from: sourceSquare,
       to: targetSquare,
-      promotion: isPromotion ? "q" : undefined,
     });
     
     socket.emit("make_move", {
       gameId,
       from: sourceSquare,
       to: targetSquare,
-      promotion: isPromotion ? "q" : undefined,
     });
 
     return true;
+  };
+
+  const handlePromotion = (piece: 'q' | 'r' | 'b' | 'n') => {
+    if (!socket || !promotionMove) return;
+    
+    console.log(`[Client] Emitting make_move with promotion:`, {
+      gameId,
+      from: promotionMove.from,
+      to: promotionMove.to,
+      promotion: piece,
+    });
+    
+    socket.emit("make_move", {
+      gameId,
+      from: promotionMove.from,
+      to: promotionMove.to,
+      promotion: piece,
+    });
+    
+    setPromotionMove(null);
   };
 
   const handleResign = () => {
@@ -606,6 +631,43 @@ export default function Game() {
           </div>
         </div>
       </div>
+
+      {/* Promotion Dialog */}
+      {promotionMove && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <Card className="bg-slate-800 border-slate-700 p-6">
+            <CardContent>
+              <h3 className="text-white text-xl font-bold mb-4 text-center">Choose Promotion</h3>
+              <div className="grid grid-cols-4 gap-4">
+                <button
+                  onClick={() => handlePromotion('q')}
+                  className="w-20 h-20 bg-slate-700 hover:bg-slate-600 rounded-lg flex items-center justify-center text-4xl transition-colors"
+                >
+                  ♕
+                </button>
+                <button
+                  onClick={() => handlePromotion('r')}
+                  className="w-20 h-20 bg-slate-700 hover:bg-slate-600 rounded-lg flex items-center justify-center text-4xl transition-colors"
+                >
+                  ♖
+                </button>
+                <button
+                  onClick={() => handlePromotion('b')}
+                  className="w-20 h-20 bg-slate-700 hover:bg-slate-600 rounded-lg flex items-center justify-center text-4xl transition-colors"
+                >
+                  ♗
+                </button>
+                <button
+                  onClick={() => handlePromotion('n')}
+                  className="w-20 h-20 bg-slate-700 hover:bg-slate-600 rounded-lg flex items-center justify-center text-4xl transition-colors"
+                >
+                  ♘
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
