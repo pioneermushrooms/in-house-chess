@@ -4,7 +4,6 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
-import { sdk } from "./_core/sdk";
 
 export const appRouter = router({
   system: systemRouter,
@@ -29,6 +28,7 @@ export const appRouter = router({
         });
         
         // Create session token
+        const { sdk } = await import("./_core/sdk");
         const sessionToken = await sdk.createSessionToken(guestOpenId, {
           name: username,
           expiresInMs: ONE_YEAR_MS,
