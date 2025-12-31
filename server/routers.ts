@@ -113,7 +113,7 @@ export const appRouter = router({
     getById: publicProcedure
       .input(z.object({ playerId: z.number() }))
       .query(async ({ input }) => {
-        const player = await db.getPlayerByUserId(input.playerId);
+        const player = await db.getPlayerById(input.playerId);
         if (!player) {
           throw new Error("Player not found");
         }

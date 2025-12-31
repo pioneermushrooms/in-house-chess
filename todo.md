@@ -369,3 +369,11 @@
 - [x] Make player names clickable in game page (opponent names in timer sidebar)
 - [x] Make player names clickable in history page (both white and black player names)
 - [x] Update backend getGames to include player data for history page
+
+
+## Bug: Profile Page Shows "Player not found" for Other Players (V2.10)
+- [x] Investigate why other players' profiles don't load
+- [x] Check Profile.tsx routing and query parameters
+- [x] Check backend player.getProfile route
+- [x] Fix profile loading to work with playerId parameter (was using getPlayerByUserId instead of getPlayerById)
+- [x] Test clicking player names from different pages
