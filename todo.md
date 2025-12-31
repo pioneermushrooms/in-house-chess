@@ -347,3 +347,7 @@
 
 ## Bug Fix (V2.5)
 - [x] Fix game creation to use selected time control (currently hardcoded to 10min)
+
+
+## UI Improvement (V2.6)
+- [x] Move timers to side of board (side-by-side layout) so both are always visible

@@ -209,84 +209,91 @@ export default function Game() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
       <div className="container max-w-7xl mx-auto py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Game Board */}
-          <div className="lg:col-span-2 space-y-4">
-            {/* Opponent Info */}
-            <Card className="bg-slate-800/50 border-slate-700">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold">
-                    {isWhite ? "B" : "W"}
-                  </div>
-                  <div>
-                    {isWhite ? (
-                      game.blackPlayer ? (
-                        <>
-                          <div className="text-white font-medium">{game.blackPlayer.alias}</div>
-                          <div className="text-sm text-slate-400">Rating: {game.blackPlayer.rating}</div>
-                        </>
-                      ) : (
-                        <div className="text-slate-400 font-medium">Waiting for opponent...</div>
-                      )
-                    ) : (
-                      game.whitePlayer ? (
-                        <>
-                          <div className="text-white font-medium">{game.whitePlayer.alias}</div>
-                          <div className="text-sm text-slate-400">Rating: {game.whitePlayer.rating}</div>
-                        </>
-                      ) : (
-                        <div className="text-slate-400 font-medium">Waiting for opponent...</div>
-                      )
-                    )}
-                  </div>
+          {/* Game Board and Timers */}
+          <div className="lg:col-span-2">
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* Chess Board */}
+              <div className="flex-1">
+                <div className="rounded-lg overflow-hidden shadow-2xl" style={{ touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}>
+                  <Chessboard
+                    options={{
+                      id: "game-board",
+                      position: fen,
+                      onPieceDrop: onDrop,
+                      boardOrientation: boardOrientation as "white" | "black",
+                      boardStyle: {
+                        borderRadius: "0.5rem",
+                      },
+                      darkSquareStyle: { backgroundColor: "#779952" },
+                      lightSquareStyle: { backgroundColor: "#edeed1" },
+                    }}
+                  />
                 </div>
-                <div className="text-2xl font-mono text-white">
-                  {formatTime(isWhite ? blackTime : whiteTime)}
-                </div>
-              </CardContent>
-            </Card>
+              </div>
 
-            {/* Chess Board */}
-            <div className="rounded-lg overflow-hidden shadow-2xl" style={{ touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}>
-              <Chessboard
-                options={{
-                  id: "game-board",
-                  position: fen,
-                  onPieceDrop: onDrop,
-                  boardOrientation: boardOrientation as "white" | "black",
-                  boardStyle: {
-                    borderRadius: "0.5rem",
-                  },
-                  darkSquareStyle: { backgroundColor: "#779952" },
-                  lightSquareStyle: { backgroundColor: "#edeed1" },
-                }}
-              />
+              {/* Timers Sidebar */}
+              <div className="flex flex-row lg:flex-col gap-4 lg:w-48">
+                {/* Opponent Timer */}
+                <Card className="flex-1 bg-slate-800/50 border-slate-700">
+                  <CardContent className="p-4 h-full flex flex-col justify-center">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold">
+                        {isWhite ? "B" : "W"}
+                      </div>
+                      <div className="flex-1">
+                        {isWhite ? (
+                          game.blackPlayer ? (
+                            <>
+                              <div className="text-white font-medium text-sm">{game.blackPlayer.alias}</div>
+                              <div className="text-xs text-slate-400">Rating: {game.blackPlayer.rating}</div>
+                            </>
+                          ) : (
+                            <div className="text-slate-400 font-medium text-sm">Waiting...</div>
+                          )
+                        ) : (
+                          game.whitePlayer ? (
+                            <>
+                              <div className="text-white font-medium text-sm">{game.whitePlayer.alias}</div>
+                              <div className="text-xs text-slate-400">Rating: {game.whitePlayer.rating}</div>
+                            </>
+                          ) : (
+                            <div className="text-slate-400 font-medium text-sm">Waiting...</div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-3xl font-mono text-white text-center">
+                      {formatTime(isWhite ? blackTime : whiteTime)}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Player Timer */}
+                <Card className="flex-1 bg-slate-800/50 border-slate-700 ring-2 ring-blue-500/50">
+                  <CardContent className="p-4 h-full flex flex-col justify-center">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${isWhite ? 'bg-white text-black' : 'bg-black'}`}>
+                        {isWhite ? "♔" : "♚"}
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-white font-medium text-sm">{player.alias}</div>
+                        <div className="text-xs text-slate-400">
+                          {isWhite ? 'White' : 'Black'} • {player.rating}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-3xl font-mono text-white text-center">
+                      {formatTime(isWhite ? whiteTime : blackTime)}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
             
             {/* Captured Pieces */}
-            <Card className="bg-slate-800/50 border-slate-700">
+            <Card className="bg-slate-800/50 border-slate-700 mt-4">
               <CardContent className="p-4">
                 <CapturedPieces fen={fen} />
-              </CardContent>
-            </Card>
-
-            {/* Player Info */}
-            <Card className="bg-slate-800/50 border-slate-700">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${isWhite ? 'bg-white text-black' : 'bg-black'}`}>
-                    {isWhite ? "♔" : "♚"}
-                  </div>
-                  <div>
-                    <div className="text-white font-medium">{player.alias} (You)</div>
-                    <div className="text-sm text-slate-400">
-                      Playing as {isWhite ? 'White' : 'Black'} • Rating: {player.rating}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-2xl font-mono text-white">
-                  {formatTime(isWhite ? whiteTime : blackTime)}
-                </div>
               </CardContent>
             </Card>
 
