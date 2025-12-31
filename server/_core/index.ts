@@ -29,6 +29,16 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
+  // DEBUG: Log DATABASE_URL for Railway troubleshooting
+  const dbUrl = process.env.DATABASE_URL ?? "";
+  console.log("[BOOT] DATABASE_URL present:", Boolean(dbUrl), "len:", dbUrl.length);
+  console.log("[BOOT] DATABASE_URL startsWith mysql://", dbUrl.startsWith("mysql://"));
+  if (dbUrl) {
+    // Mask password for security
+    const masked = dbUrl.replace(/:\/\/([^:]+):([^@]+)@/, "://$1:****@");
+    console.log("[BOOT] DATABASE_URL (masked):", masked);
+  }
+  
   const app = express();
   const server = createServer(app);
   // Configure body parser with larger size limit for file uploads
