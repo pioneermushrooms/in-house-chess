@@ -97,8 +97,11 @@ export default function Game() {
 
     // Listen for clock updates
     socket.on("clock_update", (data: any) => {
-      setWhiteTime(data.whiteTimeRemaining);
-      setBlackTime(data.blackTimeRemaining);
+      // Only update clocks if we're viewing the live position
+      if (viewingMoveIndex === null) {
+        setWhiteTime(data.whiteTimeRemaining);
+        setBlackTime(data.blackTimeRemaining);
+      }
     });
 
     // Listen for game end

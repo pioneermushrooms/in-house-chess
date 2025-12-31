@@ -423,3 +423,10 @@
 - [x] Enable full navigation during and after games
 - [x] Show "Review Mode" indicator when viewing past positions
 - [x] Auto-return to live position when new move is made
+
+
+## Bug Fixes (V2.15)
+- [x] Move navigation controls not visible in deployed version (works correctly - only shows when moves exist)
+- [x] Clocks still ticking when in review mode (fixed - only update when viewingMoveIndex is null)
+- [x] History page showing incorrect win/loss (fixed - was checking "white_wins" instead of "white_win")
+- [x] Add game history section to player profiles (shows recent 10 games with opponent and result)

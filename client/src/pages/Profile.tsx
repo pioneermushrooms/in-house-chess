@@ -24,6 +24,11 @@ export default function Profile() {
     { enabled: !!playerId }
   );
 
+  const { data: games } = trpc.player.getPlayerGames.useQuery(
+    { playerId: parseInt(playerId || "0"), limit: 10 },
+    { enabled: !!playerId }
+  );
+
   const saveCanvas = trpc.player.saveCanvasData.useMutation();
 
   // Initialize canvas
@@ -257,6 +262,59 @@ export default function Profile() {
             </Card>
           </div>
         </div>
+
+        {/* Game History Section */}
+        {games && games.length > 0 && (
+          <Card className="bg-slate-800/50 border-slate-700 mt-6">
+            <CardHeader>
+              <CardTitle className="text-white">Recent Games</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {games.map((game: any) => {
+                  const isWhite = game.whitePlayerId === parseInt(playerId || "0");
+                  const opponent = isWhite ? game.blackPlayer : game.whitePlayer;
+                  const result = game.status !== "completed" 
+                    ? "In Progress"
+                    : game.result === "draw"
+                    ? "Draw"
+                    : (game.result === "white_win" && isWhite) || (game.result === "black_win" && !isWhite)
+                    ? "Won"
+                    : "Lost";
+                  const resultColor = result === "Won" 
+                    ? "text-green-400" 
+                    : result === "Lost" 
+                    ? "text-red-400" 
+                    : result === "Draw"
+                    ? "text-yellow-400"
+                    : "text-blue-400";
+                  
+                  return (
+                    <div
+                      key={game.id}
+                      className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg hover:bg-slate-900/70 transition-colors cursor-pointer"
+                      onClick={() => setLocation(`/game/${game.id}`)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="text-sm">
+                          <div className="text-white font-medium">
+                            vs {opponent?.alias || "Unknown"}
+                          </div>
+                          <div className="text-slate-400 text-xs">
+                            {new Date(game.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                      <div className={`font-semibold ${resultColor}`}>
+                        {result}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

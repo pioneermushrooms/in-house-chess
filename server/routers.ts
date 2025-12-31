@@ -146,6 +146,27 @@ export const appRouter = router({
         return gamesWithPlayers;
       }),
 
+    // Get games for a specific player by ID (public)
+    getPlayerGames: publicProcedure
+      .input(z.object({ playerId: z.number(), limit: z.number().optional() }))
+      .query(async ({ input }) => {
+        const games = await db.getPlayerGames(input.playerId, input.limit);
+        
+        // Fetch player data for each game
+        const gamesWithPlayers = await Promise.all(
+          games.map(async (game) => {
+            const whitePlayer = game.whitePlayerId ? await db.getPlayerById(game.whitePlayerId) : null;
+            const blackPlayer = game.blackPlayerId ? await db.getPlayerById(game.blackPlayerId) : null;
+            return {
+              ...game,
+              whitePlayer,
+              blackPlayer,
+            };
+          })
+        );
+        return gamesWithPlayers;
+      }),
+
     // Get player's rating history
     getRatingHistory: protectedProcedure.query(async ({ ctx }) => {
       const player = await db.getPlayerByUserId(ctx.user.id);

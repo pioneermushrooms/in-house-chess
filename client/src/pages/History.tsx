@@ -50,7 +50,7 @@ export default function History() {
       return { text: "Draw", color: "text-yellow-400" };
     }
     
-    const won = (game.result === "white_wins" && isWhite) || (game.result === "black_wins" && isBlack);
+    const won = (game.result === "white_win" && isWhite) || (game.result === "black_win" && isBlack);
     
     return {
       text: won ? "Won" : "Lost",
