@@ -191,8 +191,9 @@ export function setupSocketIO(httpServer: HTTPServer) {
           activeGames.set(data.gameId, gameState);
           console.log(`[Socket] activeGames created - White: ${gameState.whitePlayerId}, Black: ${gameState.blackPlayerId}`);
           
-          // Only start clock if game has actually started (moves have been made)
-          if (hasStarted) {
+          // Start clock immediately when both players join (Chess.com rules: White's clock starts right away)
+          // If game already has moves, resume the clock
+          if (hasBothPlayers || hasStarted) {
             startGameClock(data.gameId, gameState, io);
           }
         } else if (gameState) {
@@ -266,24 +267,25 @@ export function setupSocketIO(httpServer: HTTPServer) {
           const now = Date.now();
           const timeElapsed = now - gameState.lastMoveTime;
 
+          // Get game info for increment
+          const game = await getGameById(data.gameId);
+          const increment = game?.increment || 0;
+
           if (isWhiteTurn) {
             gameState.whiteTimeRemaining -= timeElapsed;
+            // Add increment after completing move (Chess.com rules)
+            gameState.whiteTimeRemaining += increment * 1000; // Convert seconds to ms
           } else {
             gameState.blackTimeRemaining -= timeElapsed;
+            // Add increment after completing move (Chess.com rules)
+            gameState.blackTimeRemaining += increment * 1000; // Convert seconds to ms
           }
           gameState.lastMoveTime = now;
           gameState.currentTurn = gameState.chess.turn() === "w" ? "white" : "black";
 
-          // Get move list
-          const game = await getGameById(data.gameId);
+          // Get move list (game already fetched above for increment)
           const moveList = game?.moveList ? JSON.parse(game.moveList) : [];
-          const isFirstMove = moveList.length === 0;
           moveList.push(move.san);
-          
-          // Start the clock on first move
-          if (isFirstMove && !gameState.intervalId) {
-            startGameClock(data.gameId, gameState, io);
-          }
 
           // Check for game end conditions
           let status = "active";

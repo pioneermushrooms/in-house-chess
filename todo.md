@@ -398,3 +398,13 @@
 - [x] Chat appears in right sidebar below move history
 - [x] Messages show sender name, content, and time
 - [x] Own messages appear on right (blue), opponent's on left (gray)
+
+
+## Implement Chess.com Clock Timing Rules (V2.13)
+- [x] White's clock starts immediately when both players join
+- [x] Black's clock starts only after White makes first move (handled by turn-based clock)
+- [x] After each move, player's clock stops and opponent's starts
+- [x] Clock ticks at exactly 1 second intervals (100ms server updates with elapsed time calculation)
+- [x] Increment added after completing a move (converted from seconds to milliseconds)
+- [x] Clock updates synced between server and client via WebSocket
+- [x] Removed redundant clock start on first move
