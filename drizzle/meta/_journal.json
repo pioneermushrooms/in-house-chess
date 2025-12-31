@@ -29,6 +29,13 @@
       "when": 1767182605923,
       "tag": "0003_public_multiple_man",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1767191186214,
+      "tag": "0004_dusty_vanisher",
+      "breakpoints": true
     }
   ]
 }

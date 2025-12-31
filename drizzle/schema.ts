@@ -38,6 +38,7 @@ export const players = mysqlTable("players", {
   losses: int("losses").default(0).notNull(),
   draws: int("draws").default(0).notNull(),
   gamesPlayed: int("gamesPlayed").default(0).notNull(),
+  accountBalance: int("accountBalance").default(0).notNull(), // Internal credits for betting
   canvasData: text("canvasData"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -69,6 +70,7 @@ export const games = mysqlTable("games", {
   isRated: int("isRated").default(1).notNull(), // 1 for rated, 0 for unrated
   isComputerGame: int("isComputerGame").default(0).notNull(), // 1 for vs computer, 0 for vs human
   computerDifficulty: mysqlEnum("computerDifficulty", ["easy", "medium", "hard"]),
+  stakeAmount: int("stakeAmount").default(0).notNull(), // Credits wagered on this game
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   startedAt: timestamp("startedAt"),
   endedAt: timestamp("endedAt"),
@@ -122,3 +124,21 @@ export const chatMessages = mysqlTable("chatMessages", {
 
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertChatMessage = typeof chatMessages.$inferInsert;
+
+/**
+ * Credit transactions table.
+ * Tracks all credit additions, deductions, and transfers for betting system.
+ */
+export const transactions = mysqlTable("transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  playerId: int("playerId").notNull().references(() => players.id),
+  amount: int("amount").notNull(), // Positive for credits added, negative for deducted
+  type: mysqlEnum("type", ["admin_add", "admin_remove", "game_win", "game_loss", "game_refund"]).notNull(),
+  gameId: int("gameId").references(() => games.id), // null for admin transactions
+  description: text("description"),
+  balanceAfter: int("balanceAfter").notNull(), // Account balance after this transaction
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Transaction = typeof transactions.$inferSelect;
+export type InsertTransaction = typeof transactions.$inferInsert;

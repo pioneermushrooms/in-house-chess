@@ -503,3 +503,37 @@
 - [x] Added console logging to debug white bot first move issue
 - [x] Abort handler marks game as abandoned and cleans up active games
 - [x] User can now abort stuck computer games to clear the site
+
+
+## Internal Credit & Betting System (V3.0)
+- [ ] Add accountBalance field to players table
+- [ ] Add stake amount field to games table
+- [ ] Create transactions table for credit history
+- [ ] Add backend routes for credit management (admin only)
+- [ ] Implement automatic credit transfer on game completion
+- [ ] Add admin panel for adding/removing credits
+- [ ] Add stake input to game creation UI
+- [ ] Display stake amount in active games list
+- [ ] Show account balance in player profiles and lobby
+- [ ] Add transaction history page
+- [ ] Prevent betting on computer games
+- [ ] Validate sufficient balance before creating staked games
+- [ ] Test credit transfers and balance updates
+
+
+## Internal Credit & Betting System (V2.24)
+- [x] Add accountBalance field to players table
+- [x] Add stakeAmount field to games table
+- [x] Create transactions table for credit history
+- [x] Implement credit management functions (add/remove/transfer)
+- [x] Add credit transfer on game completion (winner gets stake)
+- [x] Build admin panel for managing player credits (admin router)
+- [x] Display account balance in lobby stats section
+- [x] Add stake input when creating games
+- [x] Validate sufficient balance before creating staked games
+- [x] Credits only transfer in non-computer games
+- [x] Draws return stakes (no transfer)
+- [ ] Write vitest tests for credit system
+- [ ] Add admin UI page for managing credits
+- [ ] Display stake amount in active games list
+- [ ] Show transaction history page

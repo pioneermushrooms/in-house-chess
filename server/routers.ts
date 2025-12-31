@@ -247,11 +247,18 @@ export const appRouter = router({
         timeControl: z.string(),
         initialTime: z.number(),
         increment: z.number(),
+        stakeAmount: z.number().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const player = await db.getPlayerByUserId(ctx.user.id);
         if (!player) {
           throw new Error("Player profile not found");
+        }
+
+        // Validate stake amount
+        const stake = input.stakeAmount || 0;
+        if (stake > 0 && player.accountBalance < stake) {
+          throw new Error(`Insufficient balance. You have ${player.accountBalance} credits.`);
         }
 
         // Generate unique invite code
@@ -270,6 +277,7 @@ export const appRouter = router({
           whiteTimeRemaining: input.initialTime * 1000,
           blackTimeRemaining: input.initialTime * 1000,
           isRated: 1,
+          stakeAmount: stake,
         });
 
         return { gameId, inviteCode };
@@ -429,7 +437,46 @@ export const appRouter = router({
         joinedAt: entry?.joinedAt,
       };
     }),
+   }),
+
+  admin: router({
+    // Add credits to a player (admin only)
+    addCredits: protectedProcedure
+      .input(z.object({
+        playerId: z.number(),
+        amount: z.number().positive(),
+        description: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new Error('Unauthorized: Admin access required');
+        }
+        await db.addCredits(input.playerId, input.amount, input.description);
+        return { success: true };
+      }),
+
+    // Remove credits from a player (admin only)
+    removeCredits: protectedProcedure
+      .input(z.object({
+        playerId: z.number(),
+        amount: z.number().positive(),
+        description: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new Error('Unauthorized: Admin access required');
+        }
+        await db.removeCredits(input.playerId, input.amount, input.description);
+        return { success: true };
+      }),
+
+    // Get all players for admin panel
+    getAllPlayers: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user.role !== 'admin') {
+        throw new Error('Unauthorized: Admin access required');
+      }
+      return await db.getAllPlayers();
+    }),
   }),
 });
-
 export type AppRouter = typeof appRouter;

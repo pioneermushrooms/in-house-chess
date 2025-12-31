@@ -79,6 +79,7 @@ export default function Lobby() {
   const [searchStartTime, setSearchStartTime] = useState<number | null>(null);
   const [computerDifficulty, setComputerDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [playerColor, setPlayerColor] = useState<'white' | 'black'>('white');
+  const [stakeAmount, setStakeAmount] = useState("");
 
   const { data: player, isLoading: playerLoading, refetch: refetchPlayer } = trpc.player.getOrCreate.useQuery(
     undefined,
@@ -227,10 +228,17 @@ export default function Lobby() {
     const [minutes, increment] = timeControl.split("+").map(Number);
     const initialTime = minutes * 60; // Convert to seconds
     
+    const stake = parseInt(stakeAmount) || 0;
+    if (stake > 0 && player && stake > player.accountBalance) {
+      toast.error(`Insufficient balance. You have ${player.accountBalance} credits.`);
+      return;
+    }
+    
     createGame.mutate({
       timeControl,
       initialTime,
       increment,
+      stakeAmount: stake,
     });
   };
 
@@ -284,22 +292,30 @@ export default function Lobby() {
                 <CardTitle className="text-white">Your Stats</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-4 gap-4 text-center">
-                  <div>
-                    <div className="text-3xl font-bold text-white">{player.rating}</div>
-                    <div className="text-sm text-slate-400">Rating</div>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-4 gap-4 text-center">
+                    <div>
+                      <div className="text-3xl font-bold text-white">{player.rating}</div>
+                      <div className="text-sm text-slate-400">Rating</div>
+                    </div>
+                    <div>
+                      <div className="text-3xl font-bold text-green-400">{player.wins}</div>
+                      <div className="text-sm text-slate-400">Wins</div>
+                    </div>
+                    <div>
+                      <div className="text-3xl font-bold text-red-400">{player.losses}</div>
+                      <div className="text-sm text-slate-400">Losses</div>
+                    </div>
+                    <div>
+                      <div className="text-3xl font-bold text-yellow-400">{player.draws}</div>
+                      <div className="text-sm text-slate-400">Draws</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-3xl font-bold text-green-400">{player.wins}</div>
-                    <div className="text-sm text-slate-400">Wins</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold text-red-400">{player.losses}</div>
-                    <div className="text-sm text-slate-400">Losses</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold text-yellow-400">{player.draws}</div>
-                    <div className="text-sm text-slate-400">Draws</div>
+                  <div className="pt-4 border-t border-slate-700">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-400">{player.accountBalance || 0} credits</div>
+                      <div className="text-sm text-slate-400">Account Balance</div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -400,6 +416,20 @@ export default function Lobby() {
                           </Button>
                         ))}
                       </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white">Stake Amount (Optional)</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        placeholder="0 credits"
+                        value={stakeAmount}
+                        onChange={(e) => setStakeAmount(e.target.value)}
+                        className="bg-slate-900/50 border-slate-600 text-white"
+                      />
+                      <p className="text-xs text-slate-400">
+                        Available: {player?.accountBalance || 0} credits
+                      </p>
                     </div>
                     <Button
                       onClick={handleCreateGame}

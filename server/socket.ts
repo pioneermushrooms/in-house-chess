@@ -9,6 +9,7 @@ import {
   updatePlayerStats,
   updatePlayerRating,
   recordRatingChange,
+  transferCredits,
 } from "./db";
 import { getUserByOpenId } from "./db";
 import { sdk } from "./_core/sdk";
@@ -790,6 +791,39 @@ async function endGame(
       console.log(`[Stats] Updated stats for game ${gameId}:`);
       console.log(`[Stats] White (${whitePlayer.alias}): W${whiteStats.wins || whitePlayer.wins} L${whiteStats.losses || whitePlayer.losses} D${whiteStats.draws || whitePlayer.draws}`);
       console.log(`[Stats] Black (${blackPlayer.alias}): W${blackStats.wins || blackPlayer.wins} L${blackStats.losses || blackPlayer.losses} D${blackStats.draws || blackPlayer.draws}`);
+    }
+  }
+
+  // Handle credit transfer for staked games
+  if (game && game.stakeAmount > 0 && !game.isComputerGame) {
+    const whitePlayer = await getPlayerById(gameState.whitePlayerId);
+    const blackPlayer = await getPlayerById(gameState.blackPlayerId);
+    
+    if (whitePlayer && blackPlayer) {
+      try {
+        if (result === "white_win") {
+          await transferCredits(
+            blackPlayer.id,
+            whitePlayer.id,
+            game.stakeAmount,
+            gameId,
+            `Won ${game.stakeAmount} credits from ${blackPlayer.alias}`
+          );
+          console.log(`[Credits] Transferred ${game.stakeAmount} credits from ${blackPlayer.alias} to ${whitePlayer.alias}`);
+        } else if (result === "black_win") {
+          await transferCredits(
+            whitePlayer.id,
+            blackPlayer.id,
+            game.stakeAmount,
+            gameId,
+            `Won ${game.stakeAmount} credits from ${whitePlayer.alias}`
+          );
+          console.log(`[Credits] Transferred ${game.stakeAmount} credits from ${whitePlayer.alias} to ${blackPlayer.alias}`);
+        }
+        // For draws, no credit transfer (stakes are returned)
+      } catch (error) {
+        console.error(`[Credits] Error transferring credits for game ${gameId}:`, error);
+      }
     }
   }
 

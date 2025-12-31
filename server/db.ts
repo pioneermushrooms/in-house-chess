@@ -5,7 +5,8 @@ import {
   Player, InsertPlayer, players,
   Game, InsertGame, games,
   RatingChange, InsertRatingChange, ratingChanges,
-  MatchmakingQueueEntry, InsertMatchmakingQueueEntry, matchmakingQueue
+  MatchmakingQueueEntry, InsertMatchmakingQueueEntry, matchmakingQueue,
+  Transaction, InsertTransaction, transactions
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -277,4 +278,113 @@ export async function getActiveGames() {
   );
 
   return gamesWithPlayers;
+}
+
+
+// ==================== Credit & Transaction Functions ====================
+
+export async function addCredits(playerId: number, amount: number, description: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const player = await db.select().from(players).where(eq(players.id, playerId)).limit(1);
+  if (!player.length) throw new Error("Player not found");
+
+  const newBalance = player[0].accountBalance + amount;
+  
+  await db.update(players)
+    .set({ accountBalance: newBalance })
+    .where(eq(players.id, playerId));
+
+  await db.insert(transactions).values({
+    playerId,
+    amount,
+    type: "admin_add",
+    description,
+    balanceAfter: newBalance,
+  });
+}
+
+export async function removeCredits(playerId: number, amount: number, description: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const player = await db.select().from(players).where(eq(players.id, playerId)).limit(1);
+  if (!player.length) throw new Error("Player not found");
+
+  const newBalance = player[0].accountBalance - amount;
+  if (newBalance < 0) throw new Error("Insufficient balance");
+
+  await db.update(players)
+    .set({ accountBalance: newBalance })
+    .where(eq(players.id, playerId));
+
+  await db.insert(transactions).values({
+    playerId,
+    amount: -amount,
+    type: "admin_remove",
+    description,
+    balanceAfter: newBalance,
+  });
+}
+
+export async function transferCredits(fromPlayerId: number, toPlayerId: number, amount: number, gameId: number, description: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const fromPlayer = await db.select().from(players).where(eq(players.id, fromPlayerId)).limit(1);
+  const toPlayer = await db.select().from(players).where(eq(players.id, toPlayerId)).limit(1);
+  
+  if (!fromPlayer.length || !toPlayer.length) throw new Error("Player not found");
+
+  const fromNewBalance = fromPlayer[0].accountBalance - amount;
+  const toNewBalance = toPlayer[0].accountBalance + amount;
+
+  if (fromNewBalance < 0) throw new Error("Insufficient balance");
+
+  // Deduct from loser
+  await db.update(players)
+    .set({ accountBalance: fromNewBalance })
+    .where(eq(players.id, fromPlayerId));
+
+  await db.insert(transactions).values({
+    playerId: fromPlayerId,
+    amount: -amount,
+    type: "game_loss",
+    gameId,
+    description,
+    balanceAfter: fromNewBalance,
+  });
+
+  // Add to winner
+  await db.update(players)
+    .set({ accountBalance: toNewBalance })
+    .where(eq(players.id, toPlayerId));
+
+  await db.insert(transactions).values({
+    playerId: toPlayerId,
+    amount,
+    type: "game_win",
+    gameId,
+    description,
+    balanceAfter: toNewBalance,
+  });
+}
+
+export async function getTransactions(playerId: number, limit: number = 20): Promise<any[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(transactions)
+    .where(eq(transactions.playerId, playerId))
+    .orderBy(desc(transactions.createdAt))
+    .limit(limit);
+}
+
+
+export async function getAllPlayers(): Promise<Player[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(players).orderBy(desc(players.rating));
 }
