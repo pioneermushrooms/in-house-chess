@@ -484,3 +484,14 @@
 - [x] Better material values (pawn=100, knight=320, bishop=330, rook=500, queen=900)
 - [x] Positional bonuses for centralization and development
 - [x] King safety in middlegame (encourages castling)
+
+
+## Last Move Highlighting + AI Fixes (V2.21)
+- [x] Add last move highlighting (yellow overlay on from/to squares)
+- [x] Fix computer to move first when player chooses Black
+- [x] Drastically improved AI strength (depth 5, quiescence search)
+- [x] Increase search depth significantly (Hard: 3→5 ply)
+- [x] Add move ordering (MVV-LVA, captures, checks, promotions, center control)
+- [x] Add quiescence search for tactical sequences
+- [x] Add bishop pair bonus, doubled pawns penalty, isolated pawns penalty
+- [x] Better alpha-beta pruning with move ordering

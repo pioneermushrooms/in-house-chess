@@ -37,6 +37,7 @@ export default function Game() {
   const [viewingMoveIndex, setViewingMoveIndex] = useState<number | null>(null); // null = live position
   const [reviewChess] = useState(new Chess()); // Separate chess instance for review
   const [promotionMove, setPromotionMove] = useState<{ from: string; to: string } | null>(null);
+  const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
 
   const { data: game, isLoading } = trpc.game.getById.useQuery(
     { gameId: gameId! },
@@ -83,6 +84,11 @@ export default function Game() {
       setEndReason(data.endReason);
       setDrawOffered(false);
       setViewingMoveIndex(null); // Return to live position when new move is made
+      
+      // Extract last move for highlighting
+      if (data.from && data.to) {
+        setLastMove({ from: data.from as Square, to: data.to as Square });
+      }
       
       // Play sound effects
       if (data.move.includes("x")) {
@@ -347,6 +353,14 @@ export default function Game() {
                       },
                       darkSquareStyle: { backgroundColor: "#779952" },
                       lightSquareStyle: { backgroundColor: "#edeed1" },
+                      squareStyles: lastMove ? {
+                        [lastMove.from]: {
+                          backgroundColor: "rgba(255, 255, 0, 0.4)",
+                        },
+                        [lastMove.to]: {
+                          backgroundColor: "rgba(255, 255, 0, 0.4)",
+                        },
+                      } : {},
                     }}
                   />
                 </div>

@@ -223,6 +223,47 @@ export function setupSocketIO(httpServer: HTTPServer) {
           endReason: latestGame.endReason,
         });
         console.log(`[Socket] Sent game_state to player ${socket.playerId}`);
+        
+        // If computer game and player is Black and no moves yet, make computer's first move
+        if (latestGame.isComputerGame && latestGame.blackPlayerId === socket.playerId) {
+          const moveList = latestGame.moveList ? JSON.parse(latestGame.moveList) : [];
+          if (moveList.length === 0 && gameState) {
+            setTimeout(async () => {
+              try {
+                const { getComputerMove } = await import("./computerPlayer");
+                const compMove = getComputerMove(gameState.chess.fen(), latestGame.computerDifficulty as 'easy' | 'medium' | 'hard');
+                const move = gameState.chess.move(compMove);
+                
+                if (move) {
+                  // Start clock on first move
+                  startGameClock(data.gameId, gameState, io);
+                  
+                  // Update database
+                  const newMoveList = [move.san];
+                  await updateGame(data.gameId, {
+                    currentFen: gameState.chess.fen(),
+                    moveList: JSON.stringify(newMoveList),
+                  });
+                  
+                  // Broadcast computer move
+                  io.to(`game_${data.gameId}`).emit("move_made", {
+                    move: move.san,
+                    from: move.from,
+                    to: move.to,
+                    fen: gameState.chess.fen(),
+                    whiteTimeRemaining: gameState.whiteTimeRemaining,
+                    blackTimeRemaining: gameState.blackTimeRemaining,
+                    status: "active",
+                    result: null,
+                    endReason: null,
+                  });
+                }
+              } catch (error) {
+                console.error("Error making computer first move:", error);
+              }
+            }, 500);
+          }
+        }
       } catch (error) {
         console.error("Error joining game:", error);
         socket.emit("error", { message: "Failed to join game" });
@@ -354,6 +395,8 @@ export function setupSocketIO(httpServer: HTTPServer) {
           
           io.to(`game_${data.gameId}`).emit("move_made", {
             move: move.san,
+            from: data.from,
+            to: data.to,
             fen: gameState.chess.fen(),
             whiteTimeRemaining: gameState.whiteTimeRemaining,
             blackTimeRemaining: gameState.blackTimeRemaining,
@@ -431,6 +474,8 @@ export function setupSocketIO(httpServer: HTTPServer) {
                 // Broadcast computer move
                 io.to(`game_${data.gameId}`).emit("move_made", {
                   move: compMove.san,
+                  from: compMove.from,
+                  to: compMove.to,
                   fen: gameState.chess.fen(),
                   whiteTimeRemaining: gameState.whiteTimeRemaining,
                   blackTimeRemaining: gameState.blackTimeRemaining,
