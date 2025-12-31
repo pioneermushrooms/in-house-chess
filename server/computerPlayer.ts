@@ -40,9 +40,9 @@ function getMediumMove(chess: Chess): string {
   return randomMove.san;
 }
 
-// Hard: Minimax with alpha-beta pruning (depth 3)
+// Hard: Minimax with alpha-beta pruning (depth 4)
 function getHardMove(chess: Chess): string {
-  const depth = 3;
+  const depth = 4;
   let bestMove: string | null = null;
   let bestValue = -Infinity;
   const alpha = -Infinity;
@@ -100,6 +100,87 @@ function minimax(chess: Chess, depth: number, alpha: number, beta: number, isMax
   }
 }
 
+// Piece-square tables for positional evaluation
+const pawnTable = [
+  0,  0,  0,  0,  0,  0,  0,  0,
+  50, 50, 50, 50, 50, 50, 50, 50,
+  10, 10, 20, 30, 30, 20, 10, 10,
+  5,  5, 10, 25, 25, 10,  5,  5,
+  0,  0,  0, 20, 20,  0,  0,  0,
+  5, -5,-10,  0,  0,-10, -5,  5,
+  5, 10, 10,-20,-20, 10, 10,  5,
+  0,  0,  0,  0,  0,  0,  0,  0
+];
+
+const knightTable = [
+  -50,-40,-30,-30,-30,-30,-40,-50,
+  -40,-20,  0,  0,  0,  0,-20,-40,
+  -30,  0, 10, 15, 15, 10,  0,-30,
+  -30,  5, 15, 20, 20, 15,  5,-30,
+  -30,  0, 15, 20, 20, 15,  0,-30,
+  -30,  5, 10, 15, 15, 10,  5,-30,
+  -40,-20,  0,  5,  5,  0,-20,-40,
+  -50,-40,-30,-30,-30,-30,-40,-50
+];
+
+const bishopTable = [
+  -20,-10,-10,-10,-10,-10,-10,-20,
+  -10,  0,  0,  0,  0,  0,  0,-10,
+  -10,  0,  5, 10, 10,  5,  0,-10,
+  -10,  5,  5, 10, 10,  5,  5,-10,
+  -10,  0, 10, 10, 10, 10,  0,-10,
+  -10, 10, 10, 10, 10, 10, 10,-10,
+  -10,  5,  0,  0,  0,  0,  5,-10,
+  -20,-10,-10,-10,-10,-10,-10,-20
+];
+
+const rookTable = [
+  0,  0,  0,  0,  0,  0,  0,  0,
+  5, 10, 10, 10, 10, 10, 10,  5,
+  -5,  0,  0,  0,  0,  0,  0, -5,
+  -5,  0,  0,  0,  0,  0,  0, -5,
+  -5,  0,  0,  0,  0,  0,  0, -5,
+  -5,  0,  0,  0,  0,  0,  0, -5,
+  -5,  0,  0,  0,  0,  0,  0, -5,
+  0,  0,  0,  5,  5,  0,  0,  0
+];
+
+const queenTable = [
+  -20,-10,-10, -5, -5,-10,-10,-20,
+  -10,  0,  0,  0,  0,  0,  0,-10,
+  -10,  0,  5,  5,  5,  5,  0,-10,
+  -5,  0,  5,  5,  5,  5,  0, -5,
+  0,  0,  5,  5,  5,  5,  0, -5,
+  -10,  5,  5,  5,  5,  5,  0,-10,
+  -10,  0,  5,  0,  0,  0,  0,-10,
+  -20,-10,-10, -5, -5,-10,-10,-20
+];
+
+const kingMiddleGameTable = [
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -20,-30,-30,-40,-40,-30,-30,-20,
+  -10,-20,-20,-20,-20,-20,-20,-10,
+  20, 20,  0,  0,  0,  0, 20, 20,
+  20, 30, 10,  0,  0, 10, 30, 20
+];
+
+function getPieceSquareValue(piece: any, row: number, col: number): number {
+  const index = piece.color === 'w' ? row * 8 + col : (7 - row) * 8 + col;
+  
+  switch (piece.type) {
+    case 'p': return pawnTable[index] / 100;
+    case 'n': return knightTable[index] / 100;
+    case 'b': return bishopTable[index] / 100;
+    case 'r': return rookTable[index] / 100;
+    case 'q': return queenTable[index] / 100;
+    case 'k': return kingMiddleGameTable[index] / 100;
+    default: return 0;
+  }
+}
+
 function evaluatePosition(chess: Chess): number {
   if (chess.isCheckmate()) {
     return chess.turn() === 'w' ? -10000 : 10000;
@@ -110,26 +191,35 @@ function evaluatePosition(chess: Chess): number {
   }
   
   const pieceValues: { [key: string]: number } = {
-    'p': 1,
-    'n': 3,
-    'b': 3,
-    'r': 5,
-    'q': 9,
-    'k': 0
+    'p': 100,
+    'n': 320,
+    'b': 330,
+    'r': 500,
+    'q': 900,
+    'k': 20000
   };
   
   let score = 0;
   const board = chess.board();
   
+  // Material and positional evaluation
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       const piece = board[i][j];
       if (piece) {
-        const value = pieceValues[piece.type] || 0;
-        score += piece.color === 'w' ? value : -value;
+        const materialValue = pieceValues[piece.type] || 0;
+        const positionalValue = getPieceSquareValue(piece, i, j);
+        const totalValue = materialValue + positionalValue;
+        score += piece.color === 'w' ? totalValue : -totalValue;
       }
     }
   }
+  
+  // Mobility bonus (number of legal moves)
+  const mobilityWeight = 10;
+  const currentTurn = chess.turn();
+  const moves = chess.moves().length;
+  score += currentTurn === 'w' ? moves * mobilityWeight : -moves * mobilityWeight;
   
   return score;
 }

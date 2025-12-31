@@ -474,3 +474,13 @@
 - [x] Send promotion choice to server
 - [x] Dialog shows chess piece symbols (♕♖♗♘)
 - [x] Works in both player vs player and computer games
+
+
+## Improve Computer AI Strength (V2.20)
+- [x] Current AI is too weak
+- [x] Improve position evaluation (piece-square tables for all pieces)
+- [x] Increase search depth for Hard mode (3→4 ply)
+- [x] Add mobility evaluation (bonus for legal moves)
+- [x] Better material values (pawn=100, knight=320, bishop=330, rook=500, queen=900)
+- [x] Positional bonuses for centralization and development
+- [x] King safety in middlegame (encourages castling)
