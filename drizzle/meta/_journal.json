@@ -15,6 +15,13 @@
       "when": 1767176456217,
       "tag": "0001_lethal_hydra",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1767178998745,
+      "tag": "0002_outstanding_maximus",
+      "breakpoints": true
     }
   ]
 }

@@ -106,3 +106,17 @@ export const matchmakingQueue = mysqlTable("matchmakingQueue", {
 
 export type MatchmakingQueueEntry = typeof matchmakingQueue.$inferSelect;
 export type InsertMatchmakingQueueEntry = typeof matchmakingQueue.$inferInsert;
+/**
+ * Chat messages table.
+ * Stores in-game chat messages between players.
+ */
+export const chatMessages = mysqlTable("chatMessages", {
+  id: int("id").autoincrement().primaryKey(),
+  gameId: int("gameId").notNull().references(() => games.id),
+  playerId: int("playerId").notNull().references(() => players.id),
+  message: text("message").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = typeof chatMessages.$inferInsert;

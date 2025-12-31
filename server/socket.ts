@@ -416,6 +416,40 @@ export function setupSocketIO(httpServer: HTTPServer) {
       }
     });
 
+    // Chat message
+    socket.on("chat_message", async (data: { gameId: number; message: string }) => {
+      try {
+        if (!socket.playerId) {
+          socket.emit("error", { message: "Not authenticated" });
+          return;
+        }
+
+        const trimmedMessage = data.message.trim();
+        if (!trimmedMessage || trimmedMessage.length > 500) {
+          socket.emit("error", { message: "Invalid message" });
+          return;
+        }
+
+        // Get player info for the message
+        const player = await getPlayerById(socket.playerId);
+        if (!player) {
+          socket.emit("error", { message: "Player not found" });
+          return;
+        }
+
+        // Broadcast message to all players in the game
+        io.to(`game_${data.gameId}`).emit("chat_message", {
+          playerId: socket.playerId,
+          playerAlias: player.alias,
+          message: trimmedMessage,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error("Error sending chat message:", error);
+        socket.emit("error", { message: "Failed to send message" });
+      }
+    });
+
     socket.on("disconnect", () => {
       console.log(`Player ${socket.playerId} disconnected`);
     });

@@ -27,6 +27,13 @@ export default function Game() {
   const [gameResult, setGameResult] = useState<string | null>(null);
   const [endReason, setEndReason] = useState<string | null>(null);
   const [drawOffered, setDrawOffered] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Array<{
+    playerId: number;
+    playerAlias: string;
+    message: string;
+    timestamp: string;
+  }>>([]);
+  const [chatInput, setChatInput] = useState("");
 
   const { data: game, isLoading } = trpc.game.getById.useQuery(
     { gameId: gameId! },
@@ -121,6 +128,11 @@ export default function Game() {
       }
     });
 
+    // Listen for chat messages
+    socket.on("chat_message", (data: any) => {
+      setChatMessages((prev) => [...prev, data]);
+    });
+
     return () => {
       socket.off("game_state");
       socket.off("move_made");
@@ -128,6 +140,7 @@ export default function Game() {
       socket.off("player_joined");
       socket.off("game_ended");
       socket.off("draw_offered");
+      socket.off("chat_message");
       socket.off("error");
     };
   }, [socket, connected, gameId, setLocation]); // chess is intentionally excluded - it's a stable ref
@@ -180,6 +193,13 @@ export default function Game() {
   const handleAcceptDraw = () => {
     if (!socket) return;
     socket.emit("accept_draw", { gameId });
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!socket || !chatInput.trim()) return;
+    socket.emit("chat_message", { gameId, message: chatInput });
+    setChatInput("");
   };
 
   const formatTime = (ms: number) => {
@@ -399,6 +419,56 @@ export default function Game() {
                       ))}
                     </div>
                   )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Chat */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardContent className="p-4">
+                <h3 className="text-white font-semibold mb-4">Chat</h3>
+                <div className="flex flex-col h-80">
+                  {/* Messages */}
+                  <div className="flex-1 overflow-y-auto space-y-2 mb-4">
+                    {chatMessages.length === 0 ? (
+                      <p className="text-slate-400 text-sm text-center py-4">
+                        No messages yet
+                      </p>
+                    ) : (
+                      chatMessages.map((msg, index) => (
+                        <div
+                          key={index}
+                          className={`p-2 rounded text-sm ${
+                            msg.playerId === player?.id
+                              ? "bg-blue-900/30 ml-8"
+                              : "bg-slate-900/50 mr-8"
+                          }`}
+                        >
+                          <div className="font-semibold text-blue-400 text-xs mb-1">
+                            {msg.playerAlias}
+                          </div>
+                          <div className="text-white">{msg.message}</div>
+                          <div className="text-slate-500 text-xs mt-1">
+                            {new Date(msg.timestamp).toLocaleTimeString()}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  {/* Input */}
+                  <form onSubmit={handleSendMessage} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      placeholder="Type a message..."
+                      maxLength={500}
+                      className="flex-1 bg-slate-900/50 border border-slate-700 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+                    />
+                    <Button type="submit" size="sm" disabled={!chatInput.trim()}>
+                      Send
+                    </Button>
+                  </form>
                 </div>
               </CardContent>
             </Card>

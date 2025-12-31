@@ -385,3 +385,16 @@
 - [x] Fixed critical bug: endGame was using getPlayerByUserId instead of getPlayerById
 - [x] Added getPlayerById to imports in socket.ts
 - [x] Stats now update correctly when games complete
+
+
+## In-Game Chat Feature (V2.12)
+- [x] Design chat UI layout (chat panel in game page)
+- [x] Add chat messages table to database schema
+- [x] Implement WebSocket chat_message event handler
+- [x] Create chat component with message list and input
+- [x] Add message sending functionality
+- [x] Display player names with messages
+- [x] Add timestamps to messages
+- [x] Chat appears in right sidebar below move history
+- [x] Messages show sender name, content, and time
+- [x] Own messages appear on right (blue), opponent's on left (gray)
