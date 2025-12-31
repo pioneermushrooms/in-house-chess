@@ -27,16 +27,9 @@ export const appRouter = router({
           lastSignedIn: new Date(),
         });
         
-        // Create session token
-        const { sdk } = await import("./_core/sdk");
-        const sessionToken = await sdk.createSessionToken(guestOpenId, {
-          name: username,
-          expiresInMs: ONE_YEAR_MS,
-        });
-        
-        // Set cookie
+        // Set simple session cookie (just store the openId, no JWT needed)
         const cookieOptions = getSessionCookieOptions(ctx.req);
-        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+        ctx.res.cookie(COOKIE_NAME, guestOpenId, { ...cookieOptions, maxAge: ONE_YEAR_MS });
         
         return { success: true, username };
       }),
