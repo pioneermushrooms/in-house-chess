@@ -377,3 +377,11 @@
 - [x] Check backend player.getProfile route
 - [x] Fix profile loading to work with playerId parameter (was using getPlayerByUserId instead of getPlayerById)
 - [x] Test clicking player names from different pages
+
+
+## Fix Stats Display Issues (V2.11)
+- [x] Investigate what stats are showing incorrectly
+- [x] Check stats calculation in game completion handler
+- [x] Fixed critical bug: endGame was using getPlayerByUserId instead of getPlayerById
+- [x] Added getPlayerById to imports in socket.ts
+- [x] Stats now update correctly when games complete

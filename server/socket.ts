@@ -5,6 +5,7 @@ import {
   getGameById,
   updateGame,
   getPlayerByUserId,
+  getPlayerById,
   updatePlayerStats,
   updatePlayerRating,
   recordRatingChange,
@@ -495,8 +496,8 @@ async function endGame(
   // Calculate rating changes using Elo
   const game = await getGameById(gameId);
   if (game?.isRated) {
-    const whitePlayer = await getPlayerByUserId(gameState.whitePlayerId);
-    const blackPlayer = await getPlayerByUserId(gameState.blackPlayerId);
+    const whitePlayer = await getPlayerById(gameState.whitePlayerId);
+    const blackPlayer = await getPlayerById(gameState.blackPlayerId);
 
     if (whitePlayer && blackPlayer) {
       const K = 32; // K-factor for Elo calculation
