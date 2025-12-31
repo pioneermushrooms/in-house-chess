@@ -324,3 +324,10 @@
 - [ ] Show game results, opponents, dates
 - [ ] Make opponent names clickable to profiles
 - [ ] Add game replay functionality (stretch goal)
+
+
+## Critical Bug Fixes (V2.2)
+- [x] Fix timer accuracy - 10min games ending in 5min
+- [x] Fix stats not updating in player profiles after games
+- [x] Add multiple time control options (1min, 3min, 5min, 10min, 15min, 30min)
+- [ ] Ensure Railway auto-deploys on GitHub push

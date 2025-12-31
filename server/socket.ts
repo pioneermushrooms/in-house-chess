@@ -437,7 +437,8 @@ function startGameClock(
     const timeElapsed = now - gameState.lastMoveTime;
 
     if (gameState.currentTurn === "white") {
-      gameState.whiteTimeRemaining -= 100; // Decrement by 100ms
+      gameState.whiteTimeRemaining -= timeElapsed; // Use actual elapsed time
+      gameState.lastMoveTime = now; // Reset for next interval
       if (gameState.whiteTimeRemaining <= 0) {
         await endGame(gameId, gameState, "black_win", "timeout", io);
         await updateGame(gameId, {
@@ -453,7 +454,8 @@ function startGameClock(
         });
       }
     } else {
-      gameState.blackTimeRemaining -= 100;
+      gameState.blackTimeRemaining -= timeElapsed; // Use actual elapsed time
+      gameState.lastMoveTime = now; // Reset for next interval
       if (gameState.blackTimeRemaining <= 0) {
         await endGame(gameId, gameState, "white_win", "timeout", io);
         await updateGame(gameId, {

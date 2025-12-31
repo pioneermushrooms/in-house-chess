@@ -75,11 +75,23 @@ export default function Lobby() {
   const [, setLocation] = useLocation();
   const [inviteCode, setInviteCode] = useState("");
   const [searching, setSearching] = useState(false);
+  const [timeControl, setTimeControl] = useState("10+0");
 
-  const { data: player, isLoading: playerLoading } = trpc.player.getOrCreate.useQuery(
+  const { data: player, isLoading: playerLoading, refetch: refetchPlayer } = trpc.player.getOrCreate.useQuery(
     undefined,
-    { enabled: !!user }
+    { 
+      enabled: !!user,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+    }
   );
+
+  // Refetch player stats when returning to lobby
+  useEffect(() => {
+    if (user) {
+      refetchPlayer();
+    }
+  }, [user, refetchPlayer]);
 
   const { data: leaderboard } = trpc.leaderboard.getTop.useQuery({ limit: 10 });
 
@@ -123,7 +135,7 @@ export default function Lobby() {
         // Poll for matches every 2 seconds
         setTimeout(() => {
           if (searching) {
-            joinQueue.mutate({ timeControl: "10+0" });
+            joinQueue.mutate({ timeControl });
           }
         }, 2000);
       }
@@ -167,7 +179,7 @@ export default function Lobby() {
 
   const handleQuickPlay = () => {
     setSearching(true);
-    joinQueue.mutate({ timeControl: "10+0" });
+    joinQueue.mutate({ timeControl });
   };
 
   const handleCancelSearch = () => {
@@ -176,9 +188,9 @@ export default function Lobby() {
   };
 
   const handleCreateGame = () => {
-    // Create a 10+0 game (10 minutes, no increment)
+    // Create a game with selected time control
     createGame.mutate({
-      timeControl: "10+0",
+      timeControl,
       initialTime: 600,
       increment: 0,
     });
@@ -259,7 +271,30 @@ export default function Lobby() {
                       Find an opponent with similar rating
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-white">Time Control</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { value: "1+0", label: "1 min" },
+                          { value: "3+0", label: "3 min" },
+                          { value: "5+0", label: "5 min" },
+                          { value: "10+0", label: "10 min" },
+                          { value: "15+0", label: "15 min" },
+                          { value: "30+0", label: "30 min" },
+                        ].map((tc) => (
+                          <Button
+                            key={tc.value}
+                            onClick={() => setTimeControl(tc.value)}
+                            variant={timeControl === tc.value ? "default" : "outline"}
+                            className={timeControl === tc.value ? "bg-blue-600 hover:bg-blue-700" : ""}
+                            size="sm"
+                          >
+                            {tc.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
                     {searching ? (
                       <Button
                         onClick={handleCancelSearch}
