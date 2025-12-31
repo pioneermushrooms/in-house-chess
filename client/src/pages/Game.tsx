@@ -247,7 +247,7 @@ export default function Game() {
             </Card>
 
             {/* Chess Board */}
-            <div className="rounded-lg overflow-hidden shadow-2xl">
+            <div className="rounded-lg overflow-hidden shadow-2xl" style={{ touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}>
               <Chessboard
                 options={{
                   id: "game-board",

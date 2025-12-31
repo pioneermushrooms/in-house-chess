@@ -289,3 +289,38 @@
 - [ ] Create simple guest session without jose/crypto
 - [ ] Update guestLogin to use plain cookie
 - [ ] Push and verify login finally works
+
+
+---
+
+# V2 Features (Post-Launch Improvements)
+
+## Mobile Support
+- [x] Add touch event handlers for chess piece movement
+- [x] Test drag-and-drop on mobile browsers (needs user testing)
+- [ ] Ensure responsive board sizing on small screens
+
+## Game Completion & Stats
+- [x] Detect checkmate/stalemate/resignation
+- [x] Update player stats (wins/losses/draws) in database
+- [x] Update ELO ratings after each game
+- [ ] Show game result modal with stats changes
+
+## Game Invitations
+- [ ] Generate unique shareable invite links
+- [ ] Store invite codes in database
+- [ ] Handle invite link acceptance flow
+- [ ] Show "waiting for opponent" state
+
+## Player Profiles
+- [ ] Create profile page route (/profile/:playerId)
+- [ ] Display player stats (rating, W/L/D, games played)
+- [ ] Add MS Paint-style canvas for profile notes/drawings
+- [ ] Save canvas data to database
+- [ ] Make all player names clickable throughout app
+
+## Game History
+- [ ] Implement history page with past games list
+- [ ] Show game results, opponents, dates
+- [ ] Make opponent names clickable to profiles
+- [ ] Add game replay functionality (stretch goal)

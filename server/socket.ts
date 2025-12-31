@@ -566,6 +566,9 @@ async function endGame(
 
       await updatePlayerStats(whitePlayer.id, whiteStats);
       await updatePlayerStats(blackPlayer.id, blackStats);
+      console.log(`[Stats] Updated stats for game ${gameId}:`);
+      console.log(`[Stats] White (${whitePlayer.alias}): W${whiteStats.wins || whitePlayer.wins} L${whiteStats.losses || whitePlayer.losses} D${whiteStats.draws || whitePlayer.draws}`);
+      console.log(`[Stats] Black (${blackPlayer.alias}): W${blackStats.wins || blackPlayer.wins} L${blackStats.losses || blackPlayer.losses} D${blackStats.draws || blackPlayer.draws}`);
     }
   }
 
