@@ -218,6 +218,16 @@ class SDKServer {
     }
 
     try {
+      // For guest sessions, cookie is just the openId (no JWT)
+      if (cookieValue.startsWith('guest_')) {
+        return {
+          openId: cookieValue,
+          appId: ENV.appId,
+          name: cookieValue.replace('guest_', '').replace(/_/g, ' '),
+        };
+      }
+      
+      // For OAuth sessions, verify JWT
       const secretKey = this.getSessionSecret();
       const { payload } = await jwtVerify(cookieValue, secretKey, {
         algorithms: ["HS256"],
