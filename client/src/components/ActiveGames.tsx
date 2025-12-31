@@ -62,13 +62,33 @@ export function ActiveGames() {
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-white font-medium text-sm">
-                    {game.whitePlayer?.alias || "Waiting..."}
-                  </span>
+                  {game.whitePlayer ? (
+                    <span
+                      className="text-white font-medium text-sm hover:text-blue-400 cursor-pointer underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLocation(`/profile/${game.whitePlayer.id}`);
+                      }}
+                    >
+                      {game.whitePlayer.alias}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 text-sm">Waiting...</span>
+                  )}
                   <span className="text-slate-400">vs</span>
-                  <span className="text-white font-medium text-sm">
-                    {game.blackPlayer?.alias || "Waiting..."}
-                  </span>
+                  {game.blackPlayer ? (
+                    <span
+                      className="text-white font-medium text-sm hover:text-blue-400 cursor-pointer underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLocation(`/profile/${game.blackPlayer.id}`);
+                      }}
+                    >
+                      {game.blackPlayer.alias}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 text-sm">Waiting...</span>
+                  )}
                 </div>
                 {isWaiting && (
                   <Badge variant="outline" className="text-xs">

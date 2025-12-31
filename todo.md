@@ -361,3 +361,9 @@
 - [ ] Make player names clickable throughout app (lobby, game, history)
 - [x] Add backend routes for saving/loading canvas data
 - [x] Add canvas drawing tools (pen, eraser, color picker, clear)
+
+
+## Make Player Names Clickable (V2.8)
+- [x] Make player names clickable in Active Games list
+- [ ] Make player names clickable in game page
+- [ ] Make player names clickable in history page
