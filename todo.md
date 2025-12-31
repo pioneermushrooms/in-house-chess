@@ -351,3 +351,13 @@
 
 ## UI Improvement (V2.6)
 - [x] Move timers to side of board (side-by-side layout) so both are always visible
+
+
+## Player Profile Page (V2.7)
+- [x] Create Profile.tsx page component
+- [x] Display player stats (rating, W-L-D, games played)
+- [x] Add MS Paint-style canvas for wall notes/drawings
+- [x] Wire up Profile button in Lobby
+- [ ] Make player names clickable throughout app (lobby, game, history)
+- [x] Add backend routes for saving/loading canvas data
+- [x] Add canvas drawing tools (pen, eraser, color picker, clear)

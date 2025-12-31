@@ -139,6 +139,25 @@ export const appRouter = router({
       }
       return await db.getPlayerRatingHistory(player.id);
     }),
+
+    // Get player's canvas data
+    getCanvasData: publicProcedure
+      .input(z.object({ playerId: z.number() }))
+      .query(async ({ input }) => {
+        const player = await db.getPlayerById(input.playerId);
+        if (!player) {
+          return null;
+        }
+        return { data: player.canvasData };
+      }),
+
+    // Save player's canvas data
+    saveCanvasData: publicProcedure
+      .input(z.object({ playerId: z.number(), data: z.string() }))
+      .mutation(async ({ input }) => {
+        await db.updatePlayerStats(input.playerId, { canvasData: input.data });
+        return { success: true };
+      }),
   }),
 
   leaderboard: router({

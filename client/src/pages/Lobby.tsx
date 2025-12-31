@@ -241,8 +241,9 @@ export default function Lobby() {
           </div>
           <Button
             variant="outline"
-            onClick={() => setLocation("/profile")}
+            onClick={() => player && setLocation(`/profile/${player.id}`)}
             className="gap-2"
+            disabled={!player}
           >
             <User className="h-4 w-4" />
             Profile

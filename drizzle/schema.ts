@@ -38,6 +38,7 @@ export const players = mysqlTable("players", {
   losses: int("losses").default(0).notNull(),
   draws: int("draws").default(0).notNull(),
   gamesPlayed: int("gamesPlayed").default(0).notNull(),
+  canvasData: text("canvasData"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
