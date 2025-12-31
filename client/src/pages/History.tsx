@@ -146,18 +146,44 @@ export default function History() {
                               <div className={`w-3 h-3 rounded-full ${
                                 game.whitePlayerId === player?.id ? "bg-white" : "bg-slate-900"
                               } border-2 border-slate-600`}></div>
-                              <span className="font-medium">
-                                {game.whitePlayerId === player?.id ? "You" : "Opponent"}
-                              </span>
+                              {game.whitePlayerId === player?.id ? (
+                                <span className="font-medium">You</span>
+                              ) : game.whitePlayer ? (
+                                <span
+                                  className="font-medium hover:text-blue-400 cursor-pointer underline"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    window.location.href = `/profile/${game.whitePlayer.id}`;
+                                  }}
+                                >
+                                  {game.whitePlayer.alias}
+                                </span>
+                              ) : (
+                                <span className="font-medium">Opponent</span>
+                              )}
                             </div>
                             <span className="text-slate-500">vs</span>
                             <div className="flex items-center gap-2">
                               <div className={`w-3 h-3 rounded-full ${
                                 game.blackPlayerId === player?.id ? "bg-white" : "bg-slate-900"
                               } border-2 border-slate-600`}></div>
-                              <span className="font-medium">
-                                {game.blackPlayerId === player?.id ? "You" : "Opponent"}
-                              </span>
+                              {game.blackPlayerId === player?.id ? (
+                                <span className="font-medium">You</span>
+                              ) : game.blackPlayer ? (
+                                <span
+                                  className="font-medium hover:text-blue-400 cursor-pointer underline"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    window.location.href = `/profile/${game.blackPlayer.id}`;
+                                  }}
+                                >
+                                  {game.blackPlayer.alias}
+                                </span>
+                              ) : (
+                                <span className="font-medium">Opponent</span>
+                              )}
                             </div>
                           </div>
                           

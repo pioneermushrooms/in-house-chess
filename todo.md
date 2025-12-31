@@ -363,7 +363,9 @@
 - [x] Add canvas drawing tools (pen, eraser, color picker, clear)
 
 
-## Make Player Names Clickable (V2.8)
+## Make Player Names Clickable (V2.8-V2.9)
 - [x] Make player names clickable in Active Games list
-- [ ] Make player names clickable in game page
-- [ ] Make player names clickable in history page
+- [x] Make player names clickable in leaderboard
+- [x] Make player names clickable in game page (opponent names in timer sidebar)
+- [x] Make player names clickable in history page (both white and black player names)
+- [x] Update backend getGames to include player data for history page

@@ -244,7 +244,12 @@ export default function Game() {
                         {isWhite ? (
                           game.blackPlayer ? (
                             <>
-                              <div className="text-white font-medium text-sm">{game.blackPlayer.alias}</div>
+                              <div
+                                className="text-white font-medium text-sm hover:text-blue-400 cursor-pointer underline"
+                                onClick={() => setLocation(`/profile/${game.blackPlayer?.id}`)}
+                              >
+                                {game.blackPlayer.alias}
+                              </div>
                               <div className="text-xs text-slate-400">Rating: {game.blackPlayer.rating}</div>
                             </>
                           ) : (
@@ -253,7 +258,12 @@ export default function Game() {
                         ) : (
                           game.whitePlayer ? (
                             <>
-                              <div className="text-white font-medium text-sm">{game.whitePlayer.alias}</div>
+                              <div
+                                className="text-white font-medium text-sm hover:text-blue-400 cursor-pointer underline"
+                                onClick={() => setLocation(`/profile/${game.whitePlayer?.id}`)}
+                              >
+                                {game.whitePlayer.alias}
+                              </div>
                               <div className="text-xs text-slate-400">Rating: {game.whitePlayer.rating}</div>
                             </>
                           ) : (

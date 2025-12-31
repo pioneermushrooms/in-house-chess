@@ -487,7 +487,12 @@ export default function Lobby() {
                             #{index + 1}
                           </div>
                           <div>
-                            <div className="text-white font-medium">{p.alias}</div>
+                            <div
+                              className="text-white font-medium hover:text-blue-400 cursor-pointer underline"
+                              onClick={() => setLocation(`/profile/${p.id}`)}
+                            >
+                              {p.alias}
+                            </div>
                             <div className="text-sm text-slate-400">
                               {p.wins}W-{p.losses}L-{p.draws}D
                             </div>

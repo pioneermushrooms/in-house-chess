@@ -128,7 +128,22 @@ export const appRouter = router({
         if (!player) {
           throw new Error("Player profile not found");
         }
-        return await db.getPlayerGames(player.id, input.limit);
+        const games = await db.getPlayerGames(player.id, input.limit);
+        
+        // Fetch player data for each game
+        const gamesWithPlayers = await Promise.all(
+          games.map(async (game) => {
+            const whitePlayer = game.whitePlayerId ? await db.getPlayerById(game.whitePlayerId) : null;
+            const blackPlayer = game.blackPlayerId ? await db.getPlayerById(game.blackPlayerId) : null;
+            return {
+              ...game,
+              whitePlayer,
+              blackPlayer,
+            };
+          })
+        );
+        
+        return gamesWithPlayers;
       }),
 
     // Get player's rating history
