@@ -238,3 +238,9 @@
 - [x] Added rollupOptions.external and optimizeDeps.exclude for jose
 - [x] Pushed commit 921fea6
 - [ ] User should verify Railway deployment works
+
+## Railway Database Migration Fix
+- [ ] Create startup migration script (migrate.mjs)
+- [ ] Update package.json start command to run migrations before server
+- [ ] Test locally that migrations run on startup
+- [ ] Push to GitHub and verify Railway deployment
