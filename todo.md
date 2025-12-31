@@ -457,3 +457,11 @@
 - [x] Add color selector UI (White/Black)
 - [x] Computer games are unrated
 - [x] Computer responds automatically after player moves
+
+
+## Fix Computer Game Activation (V2.18)
+- [x] Computer games not starting when player joins
+- [x] Socket handler recognizes computer games and starts immediately
+- [x] Don't wait for second player in computer games
+- [x] Use placeholder ID (-1) for computer player
+- [x] Report bothPlayersPresent=true for computer games

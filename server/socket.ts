@@ -148,10 +148,14 @@ export function setupSocketIO(httpServer: HTTPServer) {
         // Refresh game data before notifying
         const currentGame = await getGameById(data.gameId);
         
+        // For computer games, consider both players present immediately
+        const isComputerGame = currentGame?.isComputerGame;
+        const bothPlayersPresent = isComputerGame || playerCount >= 2;
+        
         // Notify all players about the player count
         io.to(`game_${data.gameId}`).emit("player_joined", {
-          playerCount,
-          bothPlayersPresent: playerCount >= 2,
+          playerCount: isComputerGame ? 2 : playerCount,
+          bothPlayersPresent,
           whitePlayerId: currentGame?.whitePlayerId,
           blackPlayerId: currentGame?.blackPlayerId,
         });
@@ -167,22 +171,28 @@ export function setupSocketIO(httpServer: HTTPServer) {
         
         let gameState = activeGames.get(data.gameId);
         
-        // Create activeGames entry if game has both players (active or waiting with both assigned)
+        // Create activeGames entry if game has both players OR is a computer game
         const hasBothPlayers = latestGame.whitePlayerId && latestGame.blackPlayerId;
+        const isComputerGameReady = latestGame.isComputerGame && (latestGame.whitePlayerId || latestGame.blackPlayerId);
         console.log(`[Socket] hasBothPlayers check - White: ${latestGame.whitePlayerId}, Black: ${latestGame.blackPlayerId}, Result: ${hasBothPlayers}`);
+        console.log(`[Socket] isComputerGame: ${latestGame.isComputerGame}, isComputerGameReady: ${isComputerGameReady}`);
         console.log(`[Socket] gameState exists: ${!!gameState}`);
         
-        if (!gameState && hasBothPlayers) {
+        if (!gameState && (hasBothPlayers || isComputerGameReady)) {
           console.log(`[Socket] Creating activeGames entry for game ${data.gameId}`);
           const chess = new Chess(latestGame.currentFen);
           const moveList = latestGame.moveList ? JSON.parse(latestGame.moveList) : [];
           const hasStarted = moveList.length > 0;
           
+          // For computer games, use placeholder ID for computer player
+          const whiteId = latestGame.whitePlayerId || -1;
+          const blackId = latestGame.blackPlayerId || -1;
+          
           gameState = {
             gameId: data.gameId,
             chess,
-            whitePlayerId: latestGame.whitePlayerId!,
-            blackPlayerId: latestGame.blackPlayerId!,
+            whitePlayerId: whiteId,
+            blackPlayerId: blackId,
             whiteTimeRemaining: latestGame.whiteTimeRemaining!,
             blackTimeRemaining: latestGame.blackTimeRemaining!,
             lastMoveTime: Date.now(),
