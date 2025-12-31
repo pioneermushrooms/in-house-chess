@@ -408,3 +408,18 @@
 - [x] Increment added after completing a move (converted from seconds to milliseconds)
 - [x] Clock updates synced between server and client via WebSocket
 - [x] Removed redundant clock start on first move
+
+
+## Move Navigation/Game Replay (V2.14)
+- [x] Add state to track current move position in history (viewingMoveIndex)
+- [x] Implement "go to first move" button (⏮)
+- [x] Implement "previous move" button (◀)
+- [x] Implement "next move" button (▶)
+- [x] Implement "go to latest move" button (⏭)
+- [x] Add keyboard shortcuts (Left/Right arrows, Home/End keys)
+- [x] Show current position indicator ("Live", "Start Position", "Move X of Y")
+- [x] Update board display when navigating through moves
+- [x] Disable piece movement when in review mode
+- [x] Enable full navigation during and after games
+- [x] Show "Review Mode" indicator when viewing past positions
+- [x] Auto-return to live position when new move is made

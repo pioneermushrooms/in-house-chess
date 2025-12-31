@@ -34,6 +34,8 @@ export default function Game() {
     timestamp: string;
   }>>([]);
   const [chatInput, setChatInput] = useState("");
+  const [viewingMoveIndex, setViewingMoveIndex] = useState<number | null>(null); // null = live position
+  const [reviewChess] = useState(new Chess()); // Separate chess instance for review
 
   const { data: game, isLoading } = trpc.game.getById.useQuery(
     { gameId: gameId! },
@@ -79,6 +81,7 @@ export default function Game() {
       setGameResult(data.result);
       setEndReason(data.endReason);
       setDrawOffered(false);
+      setViewingMoveIndex(null); // Return to live position when new move is made
       
       // Play sound effects
       if (data.move.includes("x")) {
@@ -145,12 +148,41 @@ export default function Game() {
     };
   }, [socket, connected, gameId, setLocation]); // chess is intentionally excluded - it's a stable ref
 
+  // Keyboard shortcuts for move navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (moveList.length === 0) return;
+      
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          goToPreviousMove();
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          goToNextMove();
+          break;
+        case "Home":
+          e.preventDefault();
+          goToFirstMove();
+          break;
+        case "End":
+          e.preventDefault();
+          goToLatestMove();
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [moveList, viewingMoveIndex]);
+
   const onDrop = ({ sourceSquare, targetSquare, piece }: any) => {
     console.log(`[Client] onDrop called: ${sourceSquare} -> ${targetSquare}, piece:`, piece);
     console.log(`[Client] Socket connected: ${!!socket}, Game status: ${gameStatus}`);
     
-    // Allow moves if socket is connected and game is not completed
-    const canMove = socket && gameStatus !== "completed" && gameStatus !== "abandoned" && targetSquare;
+    // Allow moves if socket is connected, game is not completed, and not in review mode
+    const canMove = socket && gameStatus !== "completed" && gameStatus !== "abandoned" && targetSquare && viewingMoveIndex === null;
     
     if (!canMove) {
       console.log(`[Client] Move rejected - socket: ${!!socket}, status: ${gameStatus}, target: ${targetSquare}`);
@@ -201,6 +233,47 @@ export default function Game() {
     socket.emit("chat_message", { gameId, message: chatInput });
     setChatInput("");
   };
+
+  // Move navigation functions
+  const goToMove = (moveIndex: number | null) => {
+    if (moveIndex === null) {
+      // Return to live position
+      setFen(chess.fen());
+      setViewingMoveIndex(null);
+    } else {
+      // Navigate to specific move
+      reviewChess.reset();
+      for (let i = 0; i <= moveIndex; i++) {
+        // Reconstruct position from move list
+        const moveNotation = moveList[i];
+        try {
+          reviewChess.move(moveNotation);
+        } catch (e) {
+          console.error("Error replaying move:", moveNotation, e);
+        }
+      }
+      setFen(reviewChess.fen());
+      setViewingMoveIndex(moveIndex);
+    }
+  };
+
+  const goToFirstMove = () => goToMove(-1); // Show starting position
+  const goToPreviousMove = () => {
+    if (viewingMoveIndex === null) {
+      goToMove(moveList.length - 1);
+    } else if (viewingMoveIndex >= 0) {
+      goToMove(viewingMoveIndex - 1);
+    }
+  };
+  const goToNextMove = () => {
+    if (viewingMoveIndex === null) return;
+    if (viewingMoveIndex < moveList.length - 1) {
+      goToMove(viewingMoveIndex + 1);
+    } else {
+      goToMove(null); // Return to live
+    }
+  };
+  const goToLatestMove = () => goToMove(null);
 
   const formatTime = (ms: number) => {
     const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -420,6 +493,61 @@ export default function Game() {
                     </div>
                   )}
                 </div>
+                {/* Move Navigation Controls */}
+                {moveList.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center justify-between text-xs text-slate-400">
+                      <span>
+                        {viewingMoveIndex === null
+                          ? `Live (Move ${moveList.length})`
+                          : viewingMoveIndex === -1
+                          ? "Start Position"
+                          : `Move ${viewingMoveIndex + 1} of ${moveList.length}`}
+                      </span>
+                      {viewingMoveIndex !== null && (
+                        <span className="text-yellow-400">Review Mode</span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={goToFirstMove}
+                        disabled={viewingMoveIndex === -1}
+                        className="text-xs"
+                      >
+                        ⏮
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={goToPreviousMove}
+                        disabled={viewingMoveIndex === -1}
+                        className="text-xs"
+                      >
+                        ◀
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={goToNextMove}
+                        disabled={viewingMoveIndex === null}
+                        className="text-xs"
+                      >
+                        ▶
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={goToLatestMove}
+                        disabled={viewingMoveIndex === null}
+                        className="text-xs"
+                      >
+                        ⏭
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
