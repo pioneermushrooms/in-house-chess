@@ -21,6 +21,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "client", "src"),
       "@shared": path.resolve(__dirname, "shared"),
       "@assets": path.resolve(__dirname, "attached_assets"),
+      crypto: "crypto-browserify",
     },
   },
   envDir: path.resolve(__dirname),
