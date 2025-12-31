@@ -244,3 +244,48 @@
 - [ ] Update package.json start command to run migrations before server
 - [ ] Test locally that migrations run on startup
 - [ ] Push to GitHub and verify Railway deployment
+
+## Railway Startup Script Fix
+- [ ] Create startup.sh with migration + server start
+- [ ] Push to GitHub
+- [ ] Update Railway start command to ./startup.sh
+
+## Fix drizzle-kit for Railway Production
+- [ ] Move drizzle-kit to dependencies (not devDependencies)
+- [ ] Update start script to run migrations
+- [ ] Push and verify Railway deployment
+
+## Switch to drizzle-kit push for Railway
+- [ ] Change start script from migrate to push
+- [ ] Push to GitHub
+- [ ] Verify Railway deployment creates tables automatically
+
+## Fix drizzle-kit push interactive prompt issue
+- [ ] Create cleanup.mjs to drop malformed users table
+- [ ] Update start script to run cleanup before push
+- [ ] Push and verify Railway deployment
+
+## Fix crypto is not defined error in production
+- [ ] Remove top-level sdk import from server/routers.ts
+- [ ] Import sdk only where needed (in specific procedures)
+- [ ] Rebuild and deploy to Railway
+
+## Remove cleanup script (database is fixed)
+- [ ] Remove cleanup-db.mjs from start command
+- [ ] Push to GitHub
+- [ ] Verify Railway deployment succeeds
+
+## Fix crypto error - separate type exports
+- [ ] Create server/router-types.ts with type-only AppRouter export
+- [ ] Update client/src/lib/trpc.ts to import from router-types.ts
+- [ ] Push and verify crypto error is fixed
+
+## Fix router-types to not import routers at all
+- [ ] Make router-types.ts re-export type without importing
+- [ ] Use declare module pattern
+- [ ] Push and verify crypto error is finally fixed
+
+## Replace JWT auth with simple cookie (no crypto needed)
+- [ ] Create simple guest session without jose/crypto
+- [ ] Update guestLogin to use plain cookie
+- [ ] Push and verify login finally works
