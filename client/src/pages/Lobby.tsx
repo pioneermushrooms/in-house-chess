@@ -76,6 +76,7 @@ export default function Lobby() {
   const [inviteCode, setInviteCode] = useState("");
   const [searching, setSearching] = useState(false);
   const [timeControl, setTimeControl] = useState("10+0");
+  const [searchStartTime, setSearchStartTime] = useState<number | null>(null);
 
   const { data: player, isLoading: playerLoading, refetch: refetchPlayer } = trpc.player.getOrCreate.useQuery(
     undefined,
@@ -92,6 +93,15 @@ export default function Lobby() {
       refetchPlayer();
     }
   }, [user, refetchPlayer]);
+
+  // Cleanup: leave queue when navigating away or unmounting
+  useEffect(() => {
+    return () => {
+      if (searching) {
+        leaveQueue.mutate();
+      }
+    };
+  }, [searching]);
 
   const { data: leaderboard } = trpc.leaderboard.getTop.useQuery({ limit: 10 });
 
@@ -131,6 +141,17 @@ export default function Lobby() {
         setLocation(`/game/${data.gameId}`);
       } else {
         // Still searching
+        const elapsed = searchStartTime ? Date.now() - searchStartTime : 0;
+        
+        // Timeout after 30 seconds
+        if (elapsed > 30000) {
+          setSearching(false);
+          setSearchStartTime(null);
+          leaveQueue.mutate();
+          toast.error("No opponents found. Please try again later.");
+          return;
+        }
+        
         toast.info("Searching for opponent...");
         // Poll for matches every 2 seconds
         setTimeout(() => {
@@ -179,11 +200,13 @@ export default function Lobby() {
 
   const handleQuickPlay = () => {
     setSearching(true);
+    setSearchStartTime(Date.now());
     joinQueue.mutate({ timeControl });
   };
 
   const handleCancelSearch = () => {
     setSearching(false);
+    setSearchStartTime(null);
     leaveQueue.mutate();
   };
 
@@ -325,7 +348,30 @@ export default function Lobby() {
                       Generate an invite link to share with a friend
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-white">Time Control</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { value: "1+0", label: "1 min" },
+                          { value: "3+0", label: "3 min" },
+                          { value: "5+0", label: "5 min" },
+                          { value: "10+0", label: "10 min" },
+                          { value: "15+0", label: "15 min" },
+                          { value: "30+0", label: "30 min" },
+                        ].map((tc) => (
+                          <Button
+                            key={tc.value}
+                            onClick={() => setTimeControl(tc.value)}
+                            variant={timeControl === tc.value ? "default" : "outline"}
+                            className={timeControl === tc.value ? "bg-blue-600 hover:bg-blue-700" : ""}
+                            size="sm"
+                          >
+                            {tc.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
                     <Button
                       onClick={handleCreateGame}
                       className="w-full"

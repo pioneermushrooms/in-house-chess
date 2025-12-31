@@ -331,3 +331,15 @@
 - [x] Fix stats not updating in player profiles after games
 - [x] Add multiple time control options (1min, 3min, 5min, 10min, 15min, 30min)
 - [ ] Ensure Railway auto-deploys on GitHub push
+
+
+## UI Improvements (V2.3)
+- [x] Add time control selector to Create Game section
+- [x] Improve cancel match button visibility/functionality
+
+
+## Matchmaking Queue Fixes (V2.4)
+- [x] Add 30-second client-side matchmaking timeout
+- [x] Clean up queue when player disconnects or navigates away
+- [x] Add server-side stale player removal (players in queue > 60s)
+- [x] Show "No opponents found" message after timeout

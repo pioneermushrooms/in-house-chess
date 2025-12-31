@@ -218,6 +218,11 @@ export async function getMatchmakingQueueEntry(playerId: number) {
 export async function findMatchmakingOpponent(timeControl: string, rating: number, playerId: number) {
   const db = await getDb();
   if (!db) return undefined;
+  
+  // Clean up stale entries (older than 60 seconds)
+  await db.delete(matchmakingQueue)
+    .where(sql`TIMESTAMPDIFF(SECOND, ${matchmakingQueue.joinedAt}, NOW()) > 60`);
+  
   // Find opponent with similar rating (within 200 points) and same time control
   const result = await db.select().from(matchmakingQueue)
     .where(
