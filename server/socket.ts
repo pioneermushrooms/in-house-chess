@@ -225,9 +225,12 @@ export function setupSocketIO(httpServer: HTTPServer) {
         console.log(`[Socket] Sent game_state to player ${socket.playerId}`);
         
         // If computer game and player is Black and no moves yet, make computer's first move
+        console.log(`[Socket] Checking computer first move: isComputerGame=${latestGame.isComputerGame}, blackPlayerId=${latestGame.blackPlayerId}, socket.playerId=${socket.playerId}`);
         if (latestGame.isComputerGame && latestGame.blackPlayerId === socket.playerId) {
           const moveList = latestGame.moveList ? JSON.parse(latestGame.moveList) : [];
+          console.log(`[Socket] Player is Black, moveList.length=${moveList.length}, gameState exists=${!!gameState}`);
           if (moveList.length === 0 && gameState) {
+            console.log(`[Socket] Making computer first move...`);
             setTimeout(async () => {
               try {
                 const { getComputerMove } = await import("./computerPlayer");
