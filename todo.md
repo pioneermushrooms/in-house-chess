@@ -430,3 +430,10 @@
 - [x] Clocks still ticking when in review mode (fixed - only update when viewingMoveIndex is null)
 - [x] History page showing incorrect win/loss (fixed - was checking "white_wins" instead of "white_win")
 - [x] Add game history section to player profiles (shows recent 10 games with opponent and result)
+
+
+## Fix Clock Start Timing (V2.16)
+- [x] Clock should start when White makes first move, not when both players join
+- [x] Revert previous change that started clock immediately
+- [x] Clock now starts when moveList.length === 1 (first move)
+- [x] Removed clock start when both players join

@@ -191,9 +191,9 @@ export function setupSocketIO(httpServer: HTTPServer) {
           activeGames.set(data.gameId, gameState);
           console.log(`[Socket] activeGames created - White: ${gameState.whitePlayerId}, Black: ${gameState.blackPlayerId}`);
           
-          // Start clock immediately when both players join (Chess.com rules: White's clock starts right away)
-          // If game already has moves, resume the clock
-          if (hasBothPlayers || hasStarted) {
+          // Only start clock if game has already started (has moves)
+          // Clock will start when White makes the first move
+          if (hasStarted) {
             startGameClock(data.gameId, gameState, io);
           }
         } else if (gameState) {
@@ -286,6 +286,11 @@ export function setupSocketIO(httpServer: HTTPServer) {
           // Get move list (game already fetched above for increment)
           const moveList = game?.moveList ? JSON.parse(game.moveList) : [];
           moveList.push(move.san);
+          
+          // Start clock on first move (White's first move)
+          if (moveList.length === 1) {
+            startGameClock(data.gameId, gameState, io);
+          }
 
           // Check for game end conditions
           let status = "active";
