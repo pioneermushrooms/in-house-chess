@@ -225,7 +225,7 @@ export function setupSocketIO(httpServer: HTTPServer) {
         console.log(`[Socket] Sent game_state to player ${socket.playerId}`);
         
         // If computer game and player is Black and no moves yet, make computer's first move
-        console.log(`[Socket] Checking computer first move: isComputerGame=${latestGame.isComputerGame}, blackPlayerId=${latestGame.blackPlayerId}, socket.playerId=${socket.playerId}`);
+        console.log(`[Socket] Computer first move check: isComputer=${latestGame.isComputerGame}, blackId=${latestGame.blackPlayerId}, socketId=${socket.playerId}`);
         if (latestGame.isComputerGame && latestGame.blackPlayerId === socket.playerId) {
           const moveList = latestGame.moveList ? JSON.parse(latestGame.moveList) : [];
           console.log(`[Socket] Player is Black, moveList.length=${moveList.length}, gameState exists=${!!gameState}`);
@@ -525,6 +525,44 @@ export function setupSocketIO(httpServer: HTTPServer) {
       } catch (error) {
         console.error("Error resigning:", error);
         socket.emit("error", { message: "Failed to resign" });
+      }
+    });
+
+    // Abort game (computer games only, no moves)
+    socket.on("abort_game", async (data: { gameId: number }) => {
+      try {
+        const game = await getGameById(data.gameId);
+        if (!game || !game.isComputerGame) {
+          socket.emit("error", { message: "Can only abort computer games" });
+          return;
+        }
+
+        const moveList = game.moveList ? JSON.parse(game.moveList) : [];
+        if (moveList.length > 0) {
+          socket.emit("error", { message: "Can only abort games with no moves" });
+          return;
+        }
+
+        // Mark game as completed/abandoned
+        await updateGame(data.gameId, {
+          status: "abandoned",
+          endReason: "aborted",
+          endedAt: new Date(),
+        });
+
+        // Remove from active games
+        const gameState = activeGames.get(data.gameId);
+        if (gameState) {
+          if (gameState.intervalId) {
+            clearInterval(gameState.intervalId);
+          }
+          activeGames.delete(data.gameId);
+        }
+
+        io.to(`game_${data.gameId}`).emit("game_aborted");
+      } catch (error) {
+        console.error("Error aborting game:", error);
+        socket.emit("error", { message: "Failed to abort game" });
       }
     });
 

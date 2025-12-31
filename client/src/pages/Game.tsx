@@ -445,14 +445,31 @@ export default function Game() {
             {/* Game Controls */}
             {gameStatus === "active" && (
               <div className="flex gap-3">
-                <Button
-                  onClick={handleResign}
-                  variant="destructive"
-                  className="flex-1 gap-2"
-                >
-                  <Flag className="h-4 w-4" />
-                  Resign
-                </Button>
+                {game?.isComputerGame && moveList.length === 0 ? (
+                  <Button
+                    onClick={() => {
+                      if (socket) {
+                        socket.emit("abort_game", { gameId });
+                        toast.success("Game aborted");
+                        setLocation("/lobby");
+                      }
+                    }}
+                    variant="destructive"
+                    className="flex-1 gap-2"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Abort Game
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleResign}
+                    variant="destructive"
+                    className="flex-1 gap-2"
+                  >
+                    <Flag className="h-4 w-4" />
+                    Resign
+                  </Button>
+                )}
                 {drawOffered ? (
                   <Button
                     onClick={handleAcceptDraw}

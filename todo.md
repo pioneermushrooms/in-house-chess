@@ -497,14 +497,9 @@
 - [x] Better alpha-beta pruning with move ordering
 
 
-## Fix Computer First Move Bug (V2.22)
-- [ ] Computer not making first move when player is Black
-- [ ] Debug join_game handler logic
-- [ ] Check if gameState exists when trying to make computer move
-- [ ] Verify computer move is being triggered
-
-
-## Fix Profile Pages (V2.22)
-- [x] Profile pages are broken - VERIFIED WORKING (shows rating, record, wall, recent games)
-- [x] Investigate what's causing the issue - No issue found, pages load correctly
-- [x] Fix profile page loading/display - Working as expected
+## Abort Game Feature + Fix Computer First Move (V2.23)
+- [x] Multiple stuck AI games where player is Black and bot won't start
+- [x] Add "Abort Game" button for computer games (only shows when no moves made)
+- [x] Added console logging to debug white bot first move issue
+- [x] Abort handler marks game as abandoned and cleans up active games
+- [x] User can now abort stuck computer games to clear the site
