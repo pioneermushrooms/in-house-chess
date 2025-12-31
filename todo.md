@@ -343,3 +343,7 @@
 - [x] Clean up queue when player disconnects or navigates away
 - [x] Add server-side stale player removal (players in queue > 60s)
 - [x] Show "No opponents found" message after timeout
+
+
+## Bug Fix (V2.5)
+- [x] Fix game creation to use selected time control (currently hardcoded to 10min)

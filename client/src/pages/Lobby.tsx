@@ -211,11 +211,14 @@ export default function Lobby() {
   };
 
   const handleCreateGame = () => {
-    // Create a game with selected time control
+    // Parse time control (format: "10+0" = 10 minutes + 0 increment)
+    const [minutes, increment] = timeControl.split("+").map(Number);
+    const initialTime = minutes * 60; // Convert to seconds
+    
     createGame.mutate({
       timeControl,
-      initialTime: 600,
-      increment: 0,
+      initialTime,
+      increment,
     });
   };
 
