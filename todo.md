@@ -638,3 +638,10 @@
 - [x] Update syncPayments to use syncedSessions table instead of transaction descriptions
 - [x] Prevent duplicate credit additions completely
 - [ ] Test sync button multiple times to verify idempotency
+
+
+## Cashout Utils Error Fix (V2.34)
+- [x] Fix "utils not defined" error when clicking cashout
+- [x] Added const utils = trpc.useUtils() in Lobby.tsx
+- [x] Cashout mutation now properly invalidates player query cache
+- [ ] Test cashout with sufficient balance

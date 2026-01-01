@@ -84,6 +84,8 @@ export default function Lobby() {
   const [isCashoutModalOpen, setIsCashoutModalOpen] = useState(false);
   const [cashoutAmount, setCashoutAmount] = useState("");
 
+  const utils = trpc.useUtils();
+  
   const { data: player, isLoading: playerLoading, refetch: refetchPlayer } = trpc.player.getOrCreate.useQuery(
     undefined,
     { 
