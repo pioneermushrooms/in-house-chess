@@ -738,11 +738,10 @@
 - [ ] Verify complete OAuth flow works
 
 
-## Google OAuth Callback Error (V2.45)
-- [x] HTTPS redirect URI fix deployed
-- [x] Google login initiated successfully
-- [x] User redirected back to callback
-- [x] Analyzed Railway logs - callback also using HTTP
-- [x] Fixed callback handler to use x-forwarded-proto
+## OAuth Redirect Loop (V2.46)
+- [x] OAuth callback completes successfully
+- [x] Token exchange works with HTTPS
+- [x] Found issue: missing `or` import in db.ts
+- [x] Fixed: Added `or` to drizzle-orm imports
 - [ ] Push fix to GitHub
-- [ ] Test complete OAuth flow
+- [ ] Test login redirects to lobby
