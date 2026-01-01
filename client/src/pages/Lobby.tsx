@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Trophy, Swords, Link as LinkIcon, History, User } from "lucide-react";
+import { Trophy, Swords, Link as LinkIcon, History, User, DollarSign } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ActiveGames } from "@/components/ActiveGames";
 
 function RecentGamesPreview() {
@@ -80,6 +81,8 @@ export default function Lobby() {
   const [computerDifficulty, setComputerDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [playerColor, setPlayerColor] = useState<'white' | 'black'>('white');
   const [stakeAmount, setStakeAmount] = useState("");
+  const [isCashoutModalOpen, setIsCashoutModalOpen] = useState(false);
+  const [cashoutAmount, setCashoutAmount] = useState("");
 
   const { data: player, isLoading: playerLoading, refetch: refetchPlayer } = trpc.player.getOrCreate.useQuery(
     undefined,
@@ -181,6 +184,18 @@ export default function Lobby() {
     onSuccess: (data) => {
       toast.success("Computer game created!");
       setLocation(`/game/${data.gameId}`);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const cashout = trpc.payment.requestCashout.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      setIsCashoutModalOpen(false);
+      setCashoutAmount("");
+      utils.player.getProfile.invalidate();
     },
     onError: (error) => {
       toast.error(error.message);
@@ -352,6 +367,15 @@ export default function Lobby() {
                           className="gap-2 border-purple-500 text-purple-400 hover:bg-purple-500/10"
                         >
                           📜 Transactions
+                        </Button>
+                        <Button
+                          onClick={() => setIsCashoutModalOpen(true)}
+                          variant="outline"
+                          size="sm"
+                          className="gap-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500/10"
+                          disabled={!player || player.accountBalance < 1000}
+                        >
+                          💵 Cash Out
                         </Button>
                       </div>
                     </div>
@@ -644,6 +668,73 @@ export default function Lobby() {
           </div>
         </div>
       </div>
+
+      {/* Cashout Modal */}
+      <Dialog open={isCashoutModalOpen} onOpenChange={setIsCashoutModalOpen}>
+        <DialogContent className="bg-slate-800 border-slate-700 text-white">
+          <DialogHeader>
+            <DialogTitle>Cash Out Credits</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Convert your credits back to USD. Minimum $1, maximum $5 per transaction. 10 transactions per day limit.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div>
+              <Label htmlFor="cashout-amount">Amount (credits)</Label>
+              <Input
+                id="cashout-amount"
+                type="number"
+                min="100"
+                max="500"
+                step="100"
+                value={cashoutAmount}
+                onChange={(e) => setCashoutAmount(e.target.value)}
+                placeholder="Enter amount (100-500 credits)"
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+              <p className="text-xs text-slate-400 mt-1">
+                {cashoutAmount && !isNaN(parseInt(cashoutAmount)) 
+                  ? `= $${(parseInt(cashoutAmount) / 100).toFixed(2)} USD`
+                  : 'Rate: 100 credits = $1.00 USD'}
+              </p>
+            </div>
+            <div className="bg-yellow-900/20 border border-yellow-700/50 rounded p-3">
+              <p className="text-yellow-400 text-sm font-medium mb-1">⚠️ Security Limits</p>
+              <ul className="text-xs text-slate-300 space-y-1">
+                <li>• Maximum $5.00 per transaction</li>
+                <li>• Maximum 10 cashouts per day</li>
+                <li>• Funds transferred within 3-5 business days</li>
+              </ul>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  const amount = parseInt(cashoutAmount);
+                  if (isNaN(amount) || amount < 100 || amount > 500) {
+                    toast.error('Please enter a valid amount between 100-500 credits ($1-$5)');
+                    return;
+                  }
+                  cashout.mutate({ amount });
+                }}
+                disabled={cashout.isPending || !cashoutAmount}
+                className="flex-1"
+              >
+                {cashout.isPending ? 'Processing...' : 'Confirm Cashout'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsCashoutModalOpen(false);
+                  setCashoutAmount("");
+                }}
+                disabled={cashout.isPending}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

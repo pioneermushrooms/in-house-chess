@@ -133,7 +133,7 @@ export const transactions = mysqlTable("transactions", {
   id: int("id").autoincrement().primaryKey(),
   playerId: int("playerId").notNull().references(() => players.id),
   amount: int("amount").notNull(), // Positive for credits added, negative for deducted
-  type: mysqlEnum("type", ["purchase", "admin_add", "admin_remove", "game_win", "game_loss", "game_refund", "wager_locked", "wager_returned"]).notNull(),
+  type: mysqlEnum("type", ["purchase", "admin_add", "admin_remove", "game_win", "game_loss", "game_refund", "wager_locked", "wager_returned", "cashout_pending", "cashout_completed", "cashout_failed"]).notNull(),
   gameId: int("gameId").references(() => games.id), // null for admin transactions
   description: text("description"),
   balanceAfter: int("balanceAfter").notNull(), // Account balance after this transaction
@@ -142,6 +142,23 @@ export const transactions = mysqlTable("transactions", {
 
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = typeof transactions.$inferInsert;
+
+/**
+ * Admin Actions Audit Log
+ * Tracks all admin operations for security and accountability
+ */
+export const adminActions = mysqlTable("admin_actions", {
+  id: int("id").autoincrement().primaryKey(),
+  adminEmail: varchar("admin_email", { length: 255 }).notNull(),
+  actionType: mysqlEnum("action_type", ["credit_add", "credit_remove", "view_players", "view_transactions"]).notNull(),
+  targetPlayerId: int("target_player_id").references(() => players.id),
+  amount: int("amount"),
+  reason: text("reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type AdminAction = typeof adminActions.$inferSelect;
+export type InsertAdminAction = typeof adminActions.$inferInsert;
 
 /**
  * Wager proposals table.

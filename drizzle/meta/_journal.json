@@ -43,6 +43,13 @@
       "when": 1767271321019,
       "tag": "0005_spotty_black_bird",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1767272297802,
+      "tag": "0006_quiet_valkyrie",
+      "breakpoints": true
     }
   ]
 }

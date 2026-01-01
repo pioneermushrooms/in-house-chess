@@ -7,7 +7,8 @@ import {
   RatingChange, InsertRatingChange, ratingChanges,
   MatchmakingQueueEntry, InsertMatchmakingQueueEntry, matchmakingQueue,
   Transaction, InsertTransaction, transactions,
-  WagerProposal, InsertWagerProposal, wagerProposals
+  WagerProposal, InsertWagerProposal, wagerProposals,
+  AdminAction, InsertAdminAction, adminActions
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -482,3 +483,44 @@ export async function rejectWagerProposal(proposalId: number): Promise<void> {
     .set({ status: "rejected" })
     .where(eq(wagerProposals.id, proposalId));
 }
+
+// ============================================================================
+// Admin Functions
+// ============================================================================
+
+export async function logAdminAction(action: InsertAdminAction): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(adminActions).values(action);
+}
+
+export async function getAdminActions(limit: number = 50): Promise<AdminAction[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.select()
+    .from(adminActions)
+    .orderBy(desc(adminActions.createdAt))
+    .limit(limit);
+}
+
+export async function getAdminActionCountToday(adminEmail: string): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const actions = await db.select()
+    .from(adminActions)
+    .where(
+      sql`${adminActions.adminEmail} = ${adminEmail} AND ${adminActions.createdAt} >= ${today} AND ${adminActions.actionType} IN ('credit_add', 'credit_remove')`
+    );
+
+  return actions.length;
+}
+
+// Re-export for use in routers
+export { adminActions, transactions as transactionsTable, players as playersTable };
+export * from "drizzle-orm";

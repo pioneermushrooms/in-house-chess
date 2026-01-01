@@ -13,6 +13,7 @@ import History from "./pages/History";
 import Profile from "./pages/Profile";
 import BuyCredits from "./pages/BuyCredits";
 import Transactions from "./pages/Transactions";
+import Admin from "./pages/Admin";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -27,6 +28,7 @@ function Router() {
       <Route path={"/profile/:playerId"} component={Profile} />
       <Route path={"/buy-credits"} component={BuyCredits} />
       <Route path={"/transactions"} component={Transactions} />
+      <Route path={"/admin"} component={Admin} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

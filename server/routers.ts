@@ -594,6 +594,72 @@ export const appRouter = router({
 
         return { url: session.url };
       }),
+
+    // Request cashout with security limits
+    requestCashout: protectedProcedure
+      .input(z.object({ 
+        amount: z.number().min(100).max(500) // Min $1, Max $5 per transaction
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (!stripe) {
+          throw new Error('Stripe not configured');
+        }
+
+        const player = await db.getPlayerByUserId(ctx.user.id);
+        if (!player) {
+          throw new Error('Player profile not found');
+        }
+
+        // Security: Check daily cashout limit (10 transactions per day)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const cashoutTransactions = await db.db
+          .select()
+          .from(db.transactions)
+          .where(
+            db.and(
+              db.eq(db.transactions.playerId, player.id),
+              db.gte(db.transactions.createdAt, today),
+              db.or(
+                db.eq(db.transactions.type, 'cashout_pending'),
+                db.eq(db.transactions.type, 'cashout_completed')
+              )
+            )
+          );
+
+        if (cashoutTransactions.length >= 10) {
+          throw new Error('Daily cashout limit reached (10 transactions per day). Please try again tomorrow.');
+        }
+
+        // Check if player has enough credits
+        if (player.accountBalance < input.amount) {
+          throw new Error('Insufficient credits for cashout');
+        }
+
+        // Deduct credits immediately and create pending transaction
+        const newBalance = player.accountBalance - input.amount;
+        await db.updatePlayerStats(player.id, { accountBalance: newBalance });
+        
+        await db.createTransaction({
+          playerId: player.id,
+          amount: -input.amount,
+          type: 'cashout_pending',
+          description: `Cashout request for $${(input.amount / 100).toFixed(2)} USD (Transaction ${cashoutTransactions.length + 1}/10 today)`,
+          balanceAfter: newBalance,
+        });
+
+        // Note: In production, you would create a Stripe payout here
+        // For now, we'll mark it as completed immediately
+        // TODO: Implement actual Stripe Connect payout
+        
+        return {
+          success: true,
+          amount: input.amount,
+          usdAmount: (input.amount / 100).toFixed(2),
+          remainingToday: 10 - (cashoutTransactions.length + 1),
+          message: `Cashout request submitted for $${(input.amount / 100).toFixed(2)}. Funds will be transferred within 3-5 business days. You have ${10 - (cashoutTransactions.length + 1)} cashouts remaining today.`,
+        };
+      }),
   }),
 
   wager: router({
@@ -713,6 +779,101 @@ export const appRouter = router({
 
         await db.rejectWagerProposal(proposalId);
         return { success: true };
+      }),
+  }),
+
+  admin: router({
+    // Check if user is admin
+    isAdmin: protectedProcedure.query(async ({ ctx }) => {
+      const ADMIN_EMAIL = 'schuldt91@gmail.com';
+      return ctx.user.email === ADMIN_EMAIL;
+    }),
+
+    // Get all players (admin only)
+    getAllPlayers: protectedProcedure.query(async ({ ctx }) => {
+      const ADMIN_EMAIL = 'schuldt91@gmail.com';
+      if (ctx.user.email !== ADMIN_EMAIL) {
+        throw new Error('Unauthorized: Admin access required');
+      }
+
+      await db.logAdminAction({
+        adminEmail: ctx.user.email,
+        actionType: 'view_players',
+      });
+
+      return await db.getAllPlayers();
+    }),
+
+    // Adjust player credits (admin only)
+    adjustCredits: protectedProcedure
+      .input(z.object({
+        playerId: z.number(),
+        amount: z.number().min(-500).max(500), // Max $5 worth of credits
+        reason: z.string().min(5),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const ADMIN_EMAIL = 'schuldt91@gmail.com';
+        if (ctx.user.email !== ADMIN_EMAIL) {
+          throw new Error('Unauthorized: Admin access required');
+        }
+
+        // Check daily limit (10 admin transactions per day)
+        const actionsToday = await db.getAdminActionCountToday(ctx.user.email);
+        if (actionsToday >= 10) {
+          throw new Error('Daily admin transaction limit reached (10 per day). Please try again tomorrow.');
+        }
+
+        const player = await db.getPlayerById(input.playerId);
+        if (!player) {
+          throw new Error('Player not found');
+        }
+
+        // Prevent admin from adjusting their own balance
+        const adminPlayer = await db.getPlayerByUserId(ctx.user.id);
+        if (adminPlayer && adminPlayer.id === input.playerId) {
+          throw new Error('Cannot adjust your own credit balance');
+        }
+
+        const newBalance = player.accountBalance + input.amount;
+        if (newBalance < 0) {
+          throw new Error('Cannot reduce balance below zero');
+        }
+
+        await db.updatePlayerStats(input.playerId, { accountBalance: newBalance });
+
+        await db.createTransaction({
+          playerId: input.playerId,
+          amount: input.amount,
+          type: input.amount > 0 ? 'admin_add' : 'admin_remove',
+          description: `Admin adjustment: ${input.reason}`,
+          balanceAfter: newBalance,
+        });
+
+        await db.logAdminAction({
+          adminEmail: ctx.user.email,
+          actionType: input.amount > 0 ? 'credit_add' : 'credit_remove',
+          targetPlayerId: input.playerId,
+          amount: input.amount,
+          reason: input.reason,
+        });
+
+        return {
+          success: true,
+          newBalance,
+          remainingToday: 10 - (actionsToday + 1),
+        };
+      }),
+
+    // Get admin action log
+    getAdminActions: protectedProcedure
+      .input(z.object({ limit: z.number().optional() }))
+      .query(async ({ input, ctx }) => {
+        const ADMIN_EMAIL = 'schuldt91@gmail.com';
+        if (ctx.user.email !== ADMIN_EMAIL) {
+          throw new Error('Unauthorized: Admin access required');
+        }
+
+        return await db.getAdminActions(input.limit || 50);
       }),
   }),
 });

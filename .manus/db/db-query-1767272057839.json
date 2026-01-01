@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS admin_actions (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  admin_email VARCHAR(255) NOT NULL,\n  action_type ENUM('credit_add', 'credit_remove', 'view_players', 'view_transactions') NOT NULL,\n  target_player_id INT,\n  amount INT,\n  reason TEXT,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  FOREIGN KEY (target_player_id) REFERENCES players(id)\n)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CLnct8dkeNkwEf.d4aab037a1db --database H3ST3PoK7akrmaFC8LSYTs --execute CREATE TABLE IF NOT EXISTS admin_actions (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  admin_email VARCHAR(255) NOT NULL,\n  action_type ENUM('credit_add', 'credit_remove', 'view_players', 'view_transactions') NOT NULL,\n  target_player_id INT,\n  amount INT,\n  reason TEXT,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  FOREIGN KEY (target_player_id) REFERENCES players(id)\n)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 603
+}

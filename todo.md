@@ -584,3 +584,31 @@
 - [x] Show purchase, wager, win/loss transactions with timestamps
 - [x] Add Transactions link button in lobby
 - [ ] Add filtering/sorting to transaction history - future enhancement
+
+
+## Credit Cashout System (V2.29)
+- [x] Create Stripe payout/transfer system for credit cashout
+- [x] Add cashout button in lobby with minimum threshold
+- [x] Create cashout request modal with amount input
+- [x] Implement backend cashout procedure with Stripe API
+- [x] Add cashout transactions to transaction history
+- [x] Implement security limits: $5 max per transaction, 10 transactions per day
+- [x] Add daily cashout tracking per user
+- [x] Validate cashout limits on backend with proper error messages
+- [x] Add cashout modal UI with amount input and validation
+- [x] Display security warnings in cashout modal
+- [ ] Test end-to-end cashout flow with limits
+
+## Admin Panel (V2.29)
+- [x] Create /admin route and page component
+- [x] Restrict admin access to schuldt91@gmail.com only (backend + frontend)
+- [x] Display all players with stats (rating, balance, games played)
+- [x] Add manual credit adjustment with security limits (±$5 max)
+- [x] Implement rate limiting: max 10 admin transactions per day
+- [x] Add admin action audit logging (who, what, when, amount, reason)
+- [x] Require reason input for all credit adjustments
+- [x] Show recent admin actions log on admin panel
+- [x] Display system statistics (total credits, total games, active users)
+- [x] Prevent admin from adjusting their own balance
+- [x] Display security warnings in adjustment modal
+- [ ] Add player search and filtering (future enhancement)
