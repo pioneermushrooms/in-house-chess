@@ -671,3 +671,19 @@
 - [x] Log environment variable status (OAUTH_SERVER_URL, VITE_APP_ID)
 - [ ] Deploy and check Railway logs to see if routes are registering
 - [ ] Verify OAuth callback route is being hit or returning 404
+
+
+## OAuth Fresh Rebuild (V2.39)
+- [ ] Fix route registration order - OAuth routes before SPA fallback
+- [ ] Verify /api/oauth/callback is accessible before static file serving
+- [ ] Fix sign out button - not working
+- [ ] Test complete OAuth flow locally
+- [ ] Test on Railway after deployment
+
+
+## OAuth Fresh Rebuild (V2.39)
+- [x] Fix route registration order - OAuth routes before SPA fallback
+- [x] Verify /api/oauth/callback is accessible before static file serving
+- [x] Fix sign out button - use auth.logout mutation instead of manual cookie clear
+- [x] Test complete OAuth flow locally
+- [ ] Test on Railway after deployment

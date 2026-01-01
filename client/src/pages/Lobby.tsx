@@ -86,6 +86,8 @@ export default function Lobby() {
 
   const utils = trpc.useUtils();
   
+  const logoutMutation = trpc.auth.logout.useMutation();
+  
   const { data: player, isLoading: playerLoading, refetch: refetchPlayer } = trpc.player.getOrCreate.useQuery(
     undefined,
     { 
@@ -311,9 +313,8 @@ export default function Lobby() {
             </Button>
             <Button
               variant="outline"
-              onClick={() => {
-                // Clear session and redirect to home
-                document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+              onClick={async () => {
+                await logoutMutation.mutateAsync();
                 window.location.href = '/';
               }}
               className="gap-2 border-red-500/50 text-red-400 hover:bg-red-500/10"

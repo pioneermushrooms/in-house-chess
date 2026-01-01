@@ -456,46 +456,6 @@ export const appRouter = router({
     }),
    }),
 
-  admin: router({
-    // Add credits to a player (admin only)
-    addCredits: protectedProcedure
-      .input(z.object({
-        playerId: z.number(),
-        amount: z.number().positive(),
-        description: z.string(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        if (ctx.user.role !== 'admin') {
-          throw new Error('Unauthorized: Admin access required');
-        }
-        await db.addCredits(input.playerId, input.amount, input.description);
-        return { success: true };
-      }),
-
-    // Remove credits from a player (admin only)
-    removeCredits: protectedProcedure
-      .input(z.object({
-        playerId: z.number(),
-        amount: z.number().positive(),
-        description: z.string(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        if (ctx.user.role !== 'admin') {
-          throw new Error('Unauthorized: Admin access required');
-        }
-        await db.removeCredits(input.playerId, input.amount, input.description);
-        return { success: true };
-      }),
-
-    // Get all players for admin panel
-    getAllPlayers: protectedProcedure.query(async ({ ctx }) => {
-      if (ctx.user.role !== 'admin') {
-        throw new Error('Unauthorized: Admin access required');
-      }
-      return await db.getAllPlayers();
-    }),
-  }),
-
   payment: router({
     // Get available credit packages
     getPackages: publicProcedure.query(() => {
@@ -794,12 +754,6 @@ export const appRouter = router({
       if (ctx.user.email !== ADMIN_EMAIL) {
         throw new Error('Unauthorized: Admin access required');
       }
-
-      await db.logAdminAction({
-        adminEmail: ctx.user.email,
-        actionType: 'view_players',
-      });
-
       return await db.getAllPlayers();
     }),
 
@@ -838,15 +792,12 @@ export const appRouter = router({
           throw new Error('Cannot reduce balance below zero');
         }
 
-        await db.updatePlayerStats(input.playerId, { accountBalance: newBalance });
-
-        await db.createTransaction({
-          playerId: input.playerId,
-          amount: input.amount,
-          type: input.amount > 0 ? 'admin_add' : 'admin_remove',
-          description: `Admin adjustment: ${input.reason}`,
-          balanceAfter: newBalance,
-        });
+        // Use addCredits which handles both balance update and transaction creation
+        await db.addCredits(
+          input.playerId,
+          input.amount,
+          `Admin adjustment: ${input.reason}`
+        );
 
         await db.logAdminAction({
           adminEmail: ctx.user.email,
