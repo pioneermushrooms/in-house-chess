@@ -628,3 +628,13 @@
 - [x] Replace non-existent db.createTransaction() with db.addCredits()
 - [x] Fix daily cashout limit query logic
 - [ ] Test cashout with sufficient balance
+
+
+## Sync Button Fix v2 (V2.32)
+- [x] Create synced_sessions table to track processed Stripe sessions
+- [x] Add syncedSessions to schema.ts with sessionId, playerId, credits
+- [x] Create isSessionSynced() function to check if session was processed
+- [x] Create recordSyncedSession() function to mark session as synced
+- [x] Update syncPayments to use syncedSessions table instead of transaction descriptions
+- [x] Prevent duplicate credit additions completely
+- [ ] Test sync button multiple times to verify idempotency

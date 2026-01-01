@@ -176,3 +176,18 @@ export const wagerProposals = mysqlTable("wagerProposals", {
 
 export type WagerProposal = typeof wagerProposals.$inferSelect;
 export type InsertWagerProposal = typeof wagerProposals.$inferInsert;
+
+/**
+ * Synced Stripe sessions table.
+ * Tracks which Stripe checkout sessions have been processed to prevent duplicate credit additions.
+ */
+export const syncedSessions = mysqlTable("syncedSessions", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: varchar("sessionId", { length: 255 }).notNull().unique(),
+  playerId: int("playerId").notNull().references(() => players.id),
+  credits: int("credits").notNull(),
+  syncedAt: timestamp("syncedAt").defaultNow().notNull(),
+});
+
+export type SyncedSession = typeof syncedSessions.$inferSelect;
+export type InsertSyncedSession = typeof syncedSessions.$inferInsert;

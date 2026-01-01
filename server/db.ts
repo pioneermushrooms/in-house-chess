@@ -8,7 +8,8 @@ import {
   MatchmakingQueueEntry, InsertMatchmakingQueueEntry, matchmakingQueue,
   Transaction, InsertTransaction, transactions,
   WagerProposal, InsertWagerProposal, wagerProposals,
-  AdminAction, InsertAdminAction, adminActions
+  AdminAction, InsertAdminAction, adminActions,
+  SyncedSession, InsertSyncedSession, syncedSessions
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -524,3 +525,34 @@ export async function getAdminActionCountToday(adminEmail: string): Promise<numb
 // Re-export for use in routers
 export { adminActions, transactions as transactionsTable, players as playersTable };
 export * from "drizzle-orm";
+
+
+/**
+ * Check if a Stripe session has already been synced
+ */
+export async function isSessionSynced(sessionId: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  const result = await db
+    .select()
+    .from(syncedSessions)
+    .where(eq(syncedSessions.sessionId, sessionId))
+    .limit(1);
+
+  return result.length > 0;
+}
+
+/**
+ * Record a Stripe session as synced
+ */
+export async function recordSyncedSession(sessionId: string, playerId: number, credits: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db.insert(syncedSessions).values({
+    sessionId,
+    playerId,
+    credits,
+  });
+}

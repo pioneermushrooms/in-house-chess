@@ -524,14 +524,11 @@ export const appRouter = router({
           const credits = parseInt(session.metadata.credits || '0');
           const packageId = session.metadata.package_id || 'unknown';
           
-          // Check if this session was already processed
-          const existingTransactions = await db.getTransactions(player.id, 100);
-          const alreadyProcessed = existingTransactions.some(
-            (t: any) => t.description && t.description.includes(session.id)
-          );
+          // Check if this session was already synced using dedicated table
+          const alreadySynced = await db.isSessionSynced(session.id);
 
-          if (alreadyProcessed) {
-            console.log(`[Sync] Session ${session.id} already processed, skipping`);
+          if (alreadySynced) {
+            console.log(`[Sync] Session ${session.id} already synced, skipping`);
             continue;
           }
           
@@ -541,6 +538,10 @@ export const appRouter = router({
             credits,
             `Purchased ${credits} credits (${packageId} package) via Stripe - Session ${session.id}`
           );
+          
+          // Record this session as synced
+          await db.recordSyncedSession(session.id, player.id, credits);
+          
           syncedCount++;
         }
       }

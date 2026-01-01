@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS synced_sessions (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  session_id VARCHAR(255) UNIQUE NOT NULL,\n  player_id INT NOT NULL,\n  credits INT NOT NULL,\n  synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  INDEX idx_session_id (session_id),\n  INDEX idx_player_id (player_id)\n)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CLnct8dkeNkwEf.d4aab037a1db --database H3ST3PoK7akrmaFC8LSYTs --execute CREATE TABLE IF NOT EXISTS synced_sessions (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  session_id VARCHAR(255) UNIQUE NOT NULL,\n  player_id INT NOT NULL,\n  credits INT NOT NULL,\n  synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  INDEX idx_session_id (session_id),\n  INDEX idx_player_id (player_id)\n)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 537
+}
