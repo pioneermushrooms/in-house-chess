@@ -557,3 +557,27 @@
 - [x] Create comprehensive STRIPE-SETUP.md guide
 - [ ] Test complete payment flow (requires Stripe keys in Railway)
 - [ ] Write vitest tests for payment webhook
+
+
+## Webhook & OAuth Fixes (V2.27)
+- [x] Debug why credits don't update after successful Stripe payment
+- [x] Identified issue: STRIPE_WEBHOOK_SECRET not set in Railway
+- [x] Add manual "Sync Payments" button as backup
+- [x] Implement proper Manus OAuth to replace guest login system
+- [x] Ensure payments are tied to OAuth user accounts
+- [x] Add OAuth login button on home page
+- [x] Guest login kept in backend for backwards compatibility
+- [ ] User must set STRIPE_WEBHOOK_SECRET in Railway for automatic webhook
+- [ ] Test complete payment flow end-to-end with OAuth
+
+## In-Game Wager System (V2.28 - Future)
+- [ ] Add "Propose Wager" button in active game view
+- [ ] Create wager proposal modal with credit amount input
+- [ ] Show wager proposal notification to opponent
+- [ ] Require both players to accept before wager is active
+- [ ] Display active wager amount prominently in game UI
+- [ ] Lock credits when wager is accepted (escrow)
+- [ ] Automatically transfer credits to winner when game ends
+- [ ] Return credits to both players on draw
+- [ ] Handle edge cases (disconnect, timeout, abandonment)
+- [ ] Add wager history to player profile

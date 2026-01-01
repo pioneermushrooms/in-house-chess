@@ -498,6 +498,46 @@ export const appRouter = router({
       return CREDIT_PACKAGES;
     }),
 
+    // Manual sync - fetch recent Stripe payments and add missing credits
+    syncPayments: protectedProcedure.mutation(async ({ ctx }) => {
+      if (!stripe) {
+        throw new Error('Stripe not configured');
+      }
+
+      const player = await db.getPlayerByUserId(ctx.user.id);
+      if (!player) {
+        throw new Error('Player not found');
+      }
+
+      // Fetch recent checkout sessions for this user
+      const sessions = await stripe.checkout.sessions.list({
+        limit: 10,
+      });
+
+      let syncedCount = 0;
+      for (const session of sessions.data) {
+        if (session.payment_status === 'paid' && session.metadata?.player_id === player.id.toString()) {
+          const credits = parseInt(session.metadata.credits || '0');
+          const packageId = session.metadata.package_id || 'unknown';
+          
+          // Add credits (db.addCredits is idempotent based on description)
+          try {
+            await db.addCredits(
+              player.id,
+              credits,
+              `Purchased ${credits} credits (${packageId} package) via Stripe - Session ${session.id}`
+            );
+            syncedCount++;
+          } catch (err) {
+            // Might already exist, that's ok
+            console.log(`[Sync] Session ${session.id} already processed`);
+          }
+        }
+      }
+
+      return { syncedCount, message: `Synced ${syncedCount} payment(s)` };
+    }),
+
     // Create Stripe checkout session for credit purchase
     createCheckoutSession: protectedProcedure
       .input(z.object({

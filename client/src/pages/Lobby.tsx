@@ -187,6 +187,16 @@ export default function Lobby() {
     },
   });
 
+  const syncPayments = trpc.payment.syncPayments.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      refetchPlayer();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to sync payments");
+    },
+  });
+
   useEffect(() => {
     if (!loading && !user) {
       setLocation("/");
@@ -315,14 +325,27 @@ export default function Lobby() {
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-400">{player.accountBalance || 0} credits</div>
                       <div className="text-sm text-slate-400 mb-3">Account Balance</div>
-                      <Button
-                        onClick={() => setLocation("/buy-credits")}
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 border-blue-500 text-blue-400 hover:bg-blue-500/10"
-                      >
-                        💳 Buy Credits
-                      </Button>
+                      <div className="flex gap-2 justify-center">
+                        <Button
+                          onClick={() => setLocation("/buy-credits")}
+                          variant="outline"
+                          size="sm"
+                          className="gap-2 border-blue-500 text-blue-400 hover:bg-blue-500/10"
+                        >
+                          💳 Buy Credits
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            syncPayments.mutate();
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="gap-2 border-green-500 text-green-400 hover:bg-green-500/10"
+                          disabled={syncPayments.isPending}
+                        >
+                          {syncPayments.isPending ? "Syncing..." : "🔄 Sync"}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>

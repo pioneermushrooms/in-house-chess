@@ -52,9 +52,9 @@ You need **3 environment variables** from Stripe:
 5. Add these 3 environment variables:
 
 ```
-STRIPE_SECRET_KEY=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
-VITE_STRIPE_PUBLISHABLE_KEY=pk_live_... (get from Stripe Dashboard)
-STRIPE_WEBHOOK_SECRET=whsec_... (get from webhook setup)
+STRIPE_SECRET_KEY=sk_live_YOUR_SECRET_KEY_HERE
+VITE_STRIPE_PUBLISHABLE_KEY=pk_live_YOUR_PUBLISHABLE_KEY_HERE
+STRIPE_WEBHOOK_SECRET=whsec_YOUR_WEBHOOK_SECRET_HERE
 ```
 
 6. Click **Add** for each variable
