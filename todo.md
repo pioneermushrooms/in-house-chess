@@ -620,3 +620,11 @@
 - [x] Verify wager UI is visible in active games (shows when game active, not computer, no existing stake)
 - [ ] Cash out button logic verified (requires 1000+ credits)
 - [ ] Test complete payment and wager flow end-to-end
+
+
+## Cashout Error Fix (V2.31)
+- [x] Fix "cannot read properties of undefined" error when clicking cashout
+- [x] Replace incorrect db.db.select() with db.getTransactions()
+- [x] Replace non-existent db.createTransaction() with db.addCredits()
+- [x] Fix daily cashout limit query logic
+- [ ] Test cashout with sufficient balance

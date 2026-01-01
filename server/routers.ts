@@ -619,19 +619,12 @@ export const appRouter = router({
         // Security: Check daily cashout limit (10 transactions per day)
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const cashoutTransactions = await db.db
-          .select()
-          .from(db.transactions)
-          .where(
-            db.and(
-              db.eq(db.transactions.playerId, player.id),
-              db.gte(db.transactions.createdAt, today),
-              db.or(
-                db.eq(db.transactions.type, 'cashout_pending'),
-                db.eq(db.transactions.type, 'cashout_completed')
-              )
-            )
-          );
+        const allTransactions = await db.getTransactions(player.id, 100);
+        const cashoutTransactions = allTransactions.filter(
+          (t: any) => 
+            new Date(t.createdAt) >= today &&
+            (t.type === 'cashout_pending' || t.type === 'cashout_completed')
+        );
 
         if (cashoutTransactions.length >= 10) {
           throw new Error('Daily cashout limit reached (10 transactions per day). Please try again tomorrow.');
@@ -646,13 +639,12 @@ export const appRouter = router({
         const newBalance = player.accountBalance - input.amount;
         await db.updatePlayerStats(player.id, { accountBalance: newBalance });
         
-        await db.createTransaction({
-          playerId: player.id,
-          amount: -input.amount,
-          type: 'cashout_pending',
-          description: `Cashout request for $${(input.amount / 100).toFixed(2)} USD (Transaction ${cashoutTransactions.length + 1}/10 today)`,
-          balanceAfter: newBalance,
-        });
+        // Create cashout transaction record
+        await db.addCredits(
+          player.id,
+          -input.amount,
+          `Cashout request for $${(input.amount / 100).toFixed(2)} USD (Transaction ${cashoutTransactions.length + 1}/10 today)`
+        );
 
         // Note: In production, you would create a Stripe payout here
         // For now, we'll mark it as completed immediately
