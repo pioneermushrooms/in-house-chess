@@ -537,3 +537,9 @@
 - [ ] Add admin UI page for managing credits
 - [ ] Display stake amount in active games list
 - [ ] Show transaction history page
+
+
+## Chat UI Improvements (V2.25)
+- [x] Fix chat being pushed down by move history (re-align layout)
+- [x] Add chess piece emoji quick reactions (♔♕♖♗♘♙)
+- [x] Add taunting emoji reactions (🍳 cooked, 💀 blundered, 🔥 brilliant, etc.)

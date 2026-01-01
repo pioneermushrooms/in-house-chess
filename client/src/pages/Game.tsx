@@ -614,7 +614,7 @@ export default function Game() {
             <Card className="bg-slate-800/50 border-slate-700">
               <CardContent className="p-4">
                 <h3 className="text-white font-semibold mb-4">Chat</h3>
-                <div className="flex flex-col h-80">
+                <div className="flex flex-col" style={{ height: '320px' }}>
                   {/* Messages */}
                   <div className="flex-1 overflow-y-auto space-y-2 mb-4">
                     {chatMessages.length === 0 ? (
@@ -641,6 +641,24 @@ export default function Game() {
                         </div>
                       ))
                     )}
+                  </div>
+                  {/* Emoji Quick Reactions */}
+                  <div className="flex flex-wrap gap-1 mb-2 pb-2 border-t border-slate-700 pt-2">
+                    {['♔', '♕', '♖', '♗', '♘', '♙', '🔥', '💀', '🍳', '😎', '🤔', '👍', '😱', '💪'].map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => {
+                          if (socket && player) {
+                            socket.emit("chat_message", { gameId, message: emoji });
+                          }
+                        }}
+                        className="w-8 h-8 bg-slate-700 hover:bg-slate-600 rounded text-lg transition-colors flex items-center justify-center"
+                        title={emoji === '🍳' ? 'Cooked!' : emoji === '💀' ? 'Blundered!' : emoji === '🔥' ? 'Brilliant!' : ''}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
                   </div>
                   {/* Input */}
                   <form onSubmit={handleSendMessage} className="flex gap-2">
