@@ -694,3 +694,14 @@
 - [x] Check cookie domain/secure/sameSite settings for production
 - [x] Fix cookie configuration - changed sameSite from "none" to "lax"
 - [ ] Test OAuth flow on Railway after fix
+
+
+## OAuth Railway Investigation (V2.41)
+- [x] Check GitHub history for when OAuth was working
+- [x] Compare working OAuth config with current config
+- [x] Identified issue: VITE_OAUTH_PORTAL_URL was wrong
+- [x] Fixed env vars on Railway
+- [ ] Still getting 404 on /api/oauth/callback - route not registered
+- [ ] Check if OAuth routes are being registered in production build
+- [ ] Fix route registration in production
+- [ ] Test OAuth on Railway

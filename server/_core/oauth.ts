@@ -13,7 +13,10 @@ export function registerOAuthRoutes(app: Express) {
   // Only register OAuth routes if OAuth is configured
   console.log("[OAuth] Checking OAuth configuration...");
   console.log("[OAuth] OAUTH_SERVER_URL:", process.env.OAUTH_SERVER_URL ? "SET" : "NOT SET");
+  console.log("[OAuth] OAUTH_SERVER_URL value:", process.env.OAUTH_SERVER_URL);
   console.log("[OAuth] VITE_APP_ID:", process.env.VITE_APP_ID ? "SET" : "NOT SET");
+  console.log("[OAuth] VITE_APP_ID value:", process.env.VITE_APP_ID);
+  console.log("[OAuth] All env keys:", Object.keys(process.env).filter(k => k.includes('OAUTH') || k.includes('VITE_APP')));
   
   if (!process.env.OAUTH_SERVER_URL) {
     console.log("[OAuth] OAuth routes disabled - running in guest mode");
