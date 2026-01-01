@@ -44,7 +44,7 @@ export default function Home() {
                 onClick={handleLogin}
                 className="px-8 py-6 text-lg bg-blue-600 hover:bg-blue-700"
                 size="lg">
-                Sign In with Manus
+                Join the Club
               </Button>
             )}
           </div>

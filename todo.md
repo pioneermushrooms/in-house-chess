@@ -648,8 +648,11 @@
 
 
 ## New User 404 Error & Sign-Out (V2.35)
-- [ ] Fix 404 error when new user signs in (needs more info from user)
-- [ ] Check OAuth callback and player creation flow
 - [x] Add sign-out button in lobby header
 - [x] Sign-out button clears session cookie and redirects to home
-- [ ] Test sign-in/sign-out flow with multiple accounts
+
+## OAuth Button Text & 404 Fix (V2.36)
+- [x] Change 'Sign in with Manus' button text to 'Join the Club'
+- [x] Fix 404 error - changed OAuth callback redirect from / to /lobby
+- [x] Simplified OAuth flow: callback → /lobby → /select-alias (if no player)
+- [ ] Test complete OAuth flow with new user account in incognito
