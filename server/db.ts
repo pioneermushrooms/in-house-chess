@@ -607,10 +607,11 @@ export async function getOrCreateUserByEmail(data: {
     lastSignedIn: new Date(),
   });
 
+  // Query by email since insertId might be BigInt
   const newUser = await db
     .select()
     .from(users)
-    .where(eq(users.id, Number(result.insertId)))
+    .where(eq(users.email, data.email))
     .limit(1);
 
   return newUser[0];

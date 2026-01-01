@@ -738,10 +738,10 @@
 - [ ] Verify complete OAuth flow works
 
 
-## OAuth Redirect Loop (V2.46)
-- [x] OAuth callback completes successfully
-- [x] Token exchange works with HTTPS
-- [x] Found issue: missing `or` import in db.ts
-- [x] Fixed: Added `or` to drizzle-orm imports
+## NaN User ID Error (V2.47)
+- [x] OAuth authentication successful
+- [x] User creation attempted
+- [x] Found issue: insertId is BigInt, Number() returns NaN
+- [x] Fixed: Query by email instead of insertId
 - [ ] Push fix to GitHub
-- [ ] Test login redirects to lobby
+- [ ] Test complete OAuth flow
