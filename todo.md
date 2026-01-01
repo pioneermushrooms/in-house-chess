@@ -687,3 +687,10 @@
 - [x] Fix sign out button - use auth.logout mutation instead of manual cookie clear
 - [x] Test complete OAuth flow locally
 - [ ] Test on Railway after deployment
+
+
+## OAuth Cookie Issue on Railway (V2.40)
+- [x] Diagnose "missing session cookie" error on Railway
+- [x] Check cookie domain/secure/sameSite settings for production
+- [x] Fix cookie configuration - changed sameSite from "none" to "lax"
+- [ ] Test OAuth flow on Railway after fix
