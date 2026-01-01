@@ -64,17 +64,10 @@ export function setupGoogleOAuthRoutes(app: Express) {
         googleId: googleUser.id,
       });
 
-      // Create session using Manus SDK
-      const sessionToken = await sdk.createSession({
-        openId: user.googleId || String(user.id),
-        email: user.email || "",
-        name: user.name || "",
-        expiresInMs: ONE_YEAR_MS,
-      });
-
-      // Set session cookie
+      // Set simple session cookie (store googleId as session identifier)
+      const sessionId = user.googleId || `user_${user.id}`;
       const cookieOptions = getSessionCookieOptions(req);
-      res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+      res.cookie(COOKIE_NAME, sessionId, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
       // Redirect to home page (which will redirect to lobby)
       res.redirect("/");

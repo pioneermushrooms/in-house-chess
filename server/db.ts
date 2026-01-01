@@ -614,5 +614,7 @@ export async function getOrCreateUserByEmail(data: {
     .where(eq(users.email, data.email))
     .limit(1);
 
+  console.log("[OAuth] New user created:", newUser[0].id, newUser[0].email);
+
   return newUser[0];
 }

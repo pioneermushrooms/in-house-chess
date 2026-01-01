@@ -93,6 +93,9 @@ export const appRouter = router({
           gamesPlayed: 0,
         });
 
+        // Give new players 100 starting credits
+        await db.addCredits(playerId, 100, "Welcome bonus - starting credits");
+
         return await db.getPlayerByUserId(ctx.user.id);
       }),
 

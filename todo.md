@@ -737,11 +737,12 @@
 - [ ] Test login button redirects to Google (not Manus)
 - [ ] Verify complete OAuth flow works
 
+## V2.47: Starting Credits & Sign Out Fix
+- [x] Give new users 100 starting credits on account creation
+- [ ] Fix sign-out button to properly clear Google OAuth session
+- [ ] Test session persistence across sign-out/sign-in cycles
 
-## NaN User ID Error (V2.47)
-- [x] OAuth authentication successful
-- [x] User creation attempted
-- [x] Found issue: insertId is BigInt, Number() returns NaN
-- [x] Fixed: Query by email instead of insertId
-- [ ] Push fix to GitHub
-- [ ] Test complete OAuth flow
+## V2.48: Fix Google OAuth Session Creation
+- [x] Remove sdk.createSession() call (doesn't exist)
+- [x] Use simple cookie-based session like guest login
+- [x] Push fix to GitHub for Railway deployment
