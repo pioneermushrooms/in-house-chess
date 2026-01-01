@@ -556,3 +556,62 @@ export async function recordSyncedSession(sessionId: string, playerId: number, c
     credits,
   });
 }
+
+
+/**
+ * Get or create user by email (for Google OAuth)
+ */
+export async function getOrCreateUserByEmail(data: {
+  email: string;
+  name: string;
+  avatarUrl?: string;
+  googleId: string;
+}) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  // Try to find existing user by email or googleId
+  const existing = await db
+    .select()
+    .from(users)
+    .where(or(eq(users.email, data.email), eq(users.googleId, data.googleId)))
+    .limit(1);
+
+  if (existing.length > 0) {
+    const user = existing[0];
+    
+    // Update user info if changed
+    await db
+      .update(users)
+      .set({
+        name: data.name,
+        avatarUrl: data.avatarUrl,
+        googleId: data.googleId,
+        loginMethod: "google",
+        lastSignedIn: new Date(),
+      })
+      .where(eq(users.id, user.id));
+
+    return { ...user, name: data.name, avatarUrl: data.avatarUrl };
+  }
+
+  // Create new user
+  const result = await db.insert(users).values({
+    email: data.email,
+    name: data.name,
+    avatarUrl: data.avatarUrl,
+    googleId: data.googleId,
+    loginMethod: "google",
+    lastSignedIn: new Date(),
+  });
+
+  const newUser = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, Number(result.insertId)))
+    .limit(1);
+
+  return newUser[0];
+}

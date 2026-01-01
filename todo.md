@@ -705,3 +705,26 @@
 - [ ] Check if OAuth routes are being registered in production build
 - [ ] Fix route registration in production
 - [ ] Test OAuth on Railway
+
+
+## OAuth UI Missing (V2.42)
+- [ ] Check current Home.tsx for OAuth login button
+- [ ] Search git history for when OAuth button existed
+- [ ] Compare working version with current version
+- [ ] Restore OAuth login UI
+- [ ] Test OAuth flow end-to-end on Railway
+
+
+## Google OAuth Implementation (V2.42)
+- [x] Research OAuth solutions for Railway
+- [x] Evaluate auth options - chose Google OAuth
+- [x] User created Google Cloud project and OAuth credentials
+- [x] Extract credentials from JSON file
+- [x] Implement Google OAuth provider in server
+- [x] Add Google OAuth fields to database schema
+- [x] Create getOrCreateUserByEmail function
+- [x] Update Home.tsx to detect environment and use correct OAuth
+- [ ] Push database schema changes
+- [ ] Update Railway environment variables
+- [ ] Test Google OAuth login on Railway
+- [ ] Verify account persistence and credit security

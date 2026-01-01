@@ -13,13 +13,13 @@ Add these environment variables to your Railway project:
 OAUTH_SERVER_URL=https://api.manus.im
 
 # Your Manus Project OAuth App ID
-# Get this from: Manus Project Settings → General → App ID
-VITE_APP_ID=your-manus-project-app-id
+# For Manus webdev projects, this should be the PROJECT ID, not a custom app ID
+# Current project ID: YujM2eaUTH9HssyoXDzdwz
+VITE_APP_ID=YujM2eaUTH9HssyoXDzdwz
 
 # JWT Secret for signing session tokens
-# Get this from: Manus Project Settings → Secrets → JWT_SECRET
-# Or generate a new one: openssl rand -base64 32
-JWT_SECRET=your-jwt-secret-here
+# Already set correctly: 540e746311cd7599b36a6d5d9fa35846
+JWT_SECRET=540e746311cd7599b36a6d5d9fa35846
 
 # Manus OAuth Portal URL (for frontend login button)
 VITE_OAUTH_PORTAL_URL=https://manus.im/oauth/app-auth

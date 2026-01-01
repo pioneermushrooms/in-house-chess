@@ -17,7 +17,13 @@ export default function Home() {
   }, [loading, isAuthenticated, setLocation]);
 
   const handleLogin = () => {
-    window.location.href = getLoginUrl();
+    // Use Google OAuth for Railway, Manus OAuth for Manus preview
+    const isManusPreview = window.location.hostname.includes('manus.computer');
+    if (isManusPreview) {
+      window.location.href = getLoginUrl();
+    } else {
+      window.location.href = '/api/oauth/google/login';
+    }
   };
 
   return (

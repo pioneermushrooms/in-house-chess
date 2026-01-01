@@ -50,6 +50,9 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+  // Google OAuth routes
+  const { setupGoogleOAuthRoutes } = await import("./googleOAuthRoutes.js");
+  setupGoogleOAuthRoutes(app);
   // tRPC API
   app.use(
     "/api/trpc",
