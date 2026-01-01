@@ -612,3 +612,11 @@
 - [x] Prevent admin from adjusting their own balance
 - [x] Display security warnings in adjustment modal
 - [ ] Add player search and filtering (future enhancement)
+
+
+## Bug Fixes (V2.30)
+- [x] Fix sync button adding duplicate credits on each click
+- [x] Add payment tracking to prevent duplicate credit additions
+- [x] Verify wager UI is visible in active games (shows when game active, not computer, no existing stake)
+- [ ] Cash out button logic verified (requires 1000+ credits)
+- [ ] Test complete payment and wager flow end-to-end

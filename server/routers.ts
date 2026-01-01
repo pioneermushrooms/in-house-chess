@@ -524,18 +524,24 @@ export const appRouter = router({
           const credits = parseInt(session.metadata.credits || '0');
           const packageId = session.metadata.package_id || 'unknown';
           
-          // Add credits (db.addCredits is idempotent based on description)
-          try {
-            await db.addCredits(
-              player.id,
-              credits,
-              `Purchased ${credits} credits (${packageId} package) via Stripe - Session ${session.id}`
-            );
-            syncedCount++;
-          } catch (err) {
-            // Might already exist, that's ok
-            console.log(`[Sync] Session ${session.id} already processed`);
+          // Check if this session was already processed
+          const existingTransactions = await db.getTransactions(player.id, 100);
+          const alreadyProcessed = existingTransactions.some(
+            (t: any) => t.description && t.description.includes(session.id)
+          );
+
+          if (alreadyProcessed) {
+            console.log(`[Sync] Session ${session.id} already processed, skipping`);
+            continue;
           }
+          
+          // Add credits
+          await db.addCredits(
+            player.id,
+            credits,
+            `Purchased ${credits} credits (${packageId} package) via Stripe - Session ${session.id}`
+          );
+          syncedCount++;
         }
       }
 
