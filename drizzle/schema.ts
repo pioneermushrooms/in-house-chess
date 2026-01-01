@@ -133,7 +133,7 @@ export const transactions = mysqlTable("transactions", {
   id: int("id").autoincrement().primaryKey(),
   playerId: int("playerId").notNull().references(() => players.id),
   amount: int("amount").notNull(), // Positive for credits added, negative for deducted
-  type: mysqlEnum("type", ["admin_add", "admin_remove", "game_win", "game_loss", "game_refund"]).notNull(),
+  type: mysqlEnum("type", ["purchase", "admin_add", "admin_remove", "game_win", "game_loss", "game_refund", "wager_locked", "wager_returned"]).notNull(),
   gameId: int("gameId").references(() => games.id), // null for admin transactions
   description: text("description"),
   balanceAfter: int("balanceAfter").notNull(), // Account balance after this transaction
@@ -142,3 +142,20 @@ export const transactions = mysqlTable("transactions", {
 
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = typeof transactions.$inferInsert;
+
+/**
+ * Wager proposals table.
+ * Tracks wager proposals for games, requiring mutual acceptance.
+ */
+export const wagerProposals = mysqlTable("wagerProposals", {
+  id: int("id").autoincrement().primaryKey(),
+  gameId: int("gameId").notNull().references(() => games.id),
+  proposerId: int("proposerId").notNull().references(() => players.id),
+  amount: int("amount").notNull(),
+  status: mysqlEnum("status", ["pending", "accepted", "rejected", "expired"]).default("pending").notNull(),
+  acceptedAt: timestamp("acceptedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type WagerProposal = typeof wagerProposals.$inferSelect;
+export type InsertWagerProposal = typeof wagerProposals.$inferInsert;

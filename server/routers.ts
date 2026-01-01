@@ -7,16 +7,9 @@ import * as db from "./db";
 import Stripe from "stripe";
 import { CREDIT_PACKAGES, getTotalCredits } from "../shared/creditPackages";
 
-// Initialize Stripe only if secret key is available
-let stripe: Stripe | null = null;
-if (process.env.STRIPE_SECRET_KEY) {
-  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2025-12-15.clover",
-  });
-  console.log("[Stripe] Initialized successfully");
-} else {
-  console.warn("[Stripe] STRIPE_SECRET_KEY not found - payment features disabled");
-}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-12-15.clover",
+});
 
 export const appRouter = router({
   system: systemRouter,
@@ -131,6 +124,17 @@ export const appRouter = router({
           throw new Error("Player not found");
         }
         return player;
+      }),
+
+    // Get player's transaction history
+    getTransactions: protectedProcedure
+      .input(z.object({ limit: z.number().optional() }))
+      .query(async ({ ctx, input }) => {
+        const player = await db.getPlayerByUserId(ctx.user.id);
+        if (!player) {
+          throw new Error('Player profile not found');
+        }
+        return await db.getTransactions(player.id, input.limit || 50);
       }),
 
     // Get player's game history
@@ -544,10 +548,6 @@ export const appRouter = router({
         packageId: z.string(),
       }))
       .mutation(async ({ input, ctx }) => {
-        if (!stripe) {
-          throw new Error('Payment system is not configured. Please add STRIPE_SECRET_KEY to environment variables.');
-        }
-
         const pkg = CREDIT_PACKAGES.find(p => p.id === input.packageId);
         if (!pkg) {
           throw new Error('Invalid package ID');
@@ -593,6 +593,126 @@ export const appRouter = router({
         });
 
         return { url: session.url };
+      }),
+  }),
+
+  wager: router({
+    // Propose a wager for a game
+    propose: protectedProcedure
+      .input(z.object({
+        gameId: z.number(),
+        amount: z.number().min(1),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { gameId, amount } = input;
+        const player = await db.getPlayerByUserId(ctx.user.id);
+        if (!player) {
+          throw new Error('Player not found');
+        }
+
+        // Check if player has enough credits
+        if (player.accountBalance < amount) {
+          throw new Error('Insufficient credits');
+        }
+
+        // Check if there's already an active proposal
+        const existingProposal = await db.getActiveWagerProposal(gameId);
+        if (existingProposal && existingProposal.status === 'pending') {
+          throw new Error('There is already a pending wager proposal');
+        }
+
+        // Get game to verify player is in it
+        const game = await db.getGameById(gameId);
+        if (!game) {
+          throw new Error('Game not found');
+        }
+
+        if (game.whitePlayerId !== player.id && game.blackPlayerId !== player.id) {
+          throw new Error('You are not a player in this game');
+        }
+
+        if (game.status !== 'active') {
+          throw new Error('Can only propose wagers on active games');
+        }
+
+        if (game.stakeAmount > 0) {
+          throw new Error('This game already has a wager');
+        }
+
+        const proposal = await db.createWagerProposal(gameId, player.id, amount);
+        return proposal;
+      }),
+
+    // Get active wager proposal for a game
+    getProposal: publicProcedure
+      .input(z.object({ gameId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getActiveWagerProposal(input.gameId);
+      }),
+
+    // Accept a wager proposal
+    accept: protectedProcedure
+      .input(z.object({ proposalId: z.number(), gameId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const { proposalId, gameId } = input;
+        const player = await db.getPlayerByUserId(ctx.user.id);
+        if (!player) {
+          throw new Error('Player not found');
+        }
+
+        const proposal = await db.getActiveWagerProposal(gameId);
+        if (!proposal || proposal.id !== proposalId) {
+          throw new Error('Proposal not found');
+        }
+
+        if (proposal.status !== 'pending') {
+          throw new Error('Proposal is no longer pending');
+        }
+
+        // Get game
+        const game = await db.getGameById(gameId);
+        if (!game) {
+          throw new Error('Game not found');
+        }
+
+        // Verify acceptor is the other player
+        if (proposal.proposerId === player.id) {
+          throw new Error('Cannot accept your own proposal');
+        }
+
+        if (game.whitePlayerId !== player.id && game.blackPlayerId !== player.id) {
+          throw new Error('You are not a player in this game');
+        }
+
+        // Check if acceptor has enough credits
+        if (player.accountBalance < proposal.amount) {
+          throw new Error('Insufficient credits to accept wager');
+        }
+
+        // Accept the proposal (locks credits from both players)
+        await db.acceptWagerProposal(
+          proposalId,
+          gameId,
+          game.whitePlayerId!,
+          game.blackPlayerId!,
+          proposal.amount
+        );
+
+        return { success: true };
+      }),
+
+    // Reject a wager proposal
+    reject: protectedProcedure
+      .input(z.object({ proposalId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const { proposalId } = input;
+        const player = await db.getPlayerByUserId(ctx.user.id);
+        if (!player) {
+          throw new Error('Player not found');
+        }
+
+        await db.rejectWagerProposal(proposalId);
+        return { success: true };
       }),
   }),
 });

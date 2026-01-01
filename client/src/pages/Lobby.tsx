@@ -325,7 +325,7 @@ export default function Lobby() {
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-400">{player.accountBalance || 0} credits</div>
                       <div className="text-sm text-slate-400 mb-3">Account Balance</div>
-                      <div className="flex gap-2 justify-center">
+                      <div className="flex gap-2 justify-center flex-wrap">
                         <Button
                           onClick={() => setLocation("/buy-credits")}
                           variant="outline"
@@ -344,6 +344,14 @@ export default function Lobby() {
                           disabled={syncPayments.isPending}
                         >
                           {syncPayments.isPending ? "Syncing..." : "🔄 Sync"}
+                        </Button>
+                        <Button
+                          onClick={() => setLocation("/transactions")}
+                          variant="outline"
+                          size="sm"
+                          className="gap-2 border-purple-500 text-purple-400 hover:bg-purple-500/10"
+                        >
+                          📜 Transactions
                         </Button>
                       </div>
                     </div>

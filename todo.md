@@ -547,15 +547,13 @@
 
 ## Stripe Payment Integration (V2.26)
 - [x] Add Stripe feature to project with webdev_add_feature
-- [x] Configure Stripe API keys (secret and publishable) - via Railway env vars
+- [x] Configure Stripe API keys (secret and publishable) - via Management UI
 - [x] Define credit purchase packages (e.g., $5=500 credits, $10=1100 credits)
 - [x] Create Buy Credits page with Stripe Checkout
 - [x] Implement payment success webhook handler
 - [x] Add credits to player account after successful payment
 - [x] Add "Buy Credits" button in lobby
-- [x] Fix Railway crash - make Stripe initialization optional
-- [x] Create comprehensive STRIPE-SETUP.md guide
-- [ ] Test complete payment flow (requires Stripe keys in Railway)
+- [ ] Test complete payment flow (requires Stripe keys in Management UI)
 - [ ] Write vitest tests for payment webhook
 
 
@@ -570,14 +568,19 @@
 - [ ] User must set STRIPE_WEBHOOK_SECRET in Railway for automatic webhook
 - [ ] Test complete payment flow end-to-end with OAuth
 
-## In-Game Wager System (V2.28 - Future)
-- [ ] Add "Propose Wager" button in active game view
-- [ ] Create wager proposal modal with credit amount input
-- [ ] Show wager proposal notification to opponent
-- [ ] Require both players to accept before wager is active
-- [ ] Display active wager amount prominently in game UI
-- [ ] Lock credits when wager is accepted (escrow)
-- [ ] Automatically transfer credits to winner when game ends
-- [ ] Return credits to both players on draw
-- [ ] Handle edge cases (disconnect, timeout, abandonment)
-- [ ] Add wager history to player profile
+## In-Game Wager System (V2.28)
+- [x] Add "Propose Wager" button in active game view
+- [x] Create wager proposal modal with credit amount input
+- [x] Show wager proposal notification to opponent
+- [x] Require both players to accept before wager is active
+- [x] Display active wager amount prominently in game UI
+- [x] Lock credits when wager is accepted (escrow)
+- [x] Automatically transfer credits to winner when game ends (existing logic)
+- [x] Return credits to both players on draw (existing logic)
+- [ ] Handle edge cases (disconnect, timeout, abandonment) - needs testing
+- [x] Display stakes (💰 amount) on game cards in lobby
+- [x] Display stakes on game history entries
+- [x] Create /transactions page showing all credit movements
+- [x] Show purchase, wager, win/loss transactions with timestamps
+- [x] Add Transactions link button in lobby
+- [ ] Add filtering/sorting to transaction history - future enhancement

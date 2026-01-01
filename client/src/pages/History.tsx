@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, Trophy, Clock, Calendar } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default function History() {
   const [limit, setLimit] = useState(10);
@@ -188,6 +189,11 @@ export default function History() {
                           </div>
                           
                           <div className="flex items-center gap-4 text-sm text-slate-400">
+                            {game.stakeAmount > 0 && (
+                              <Badge className="text-xs bg-yellow-600 hover:bg-yellow-700 border-yellow-500">
+                                💰 {game.stakeAmount}
+                              </Badge>
+                            )}
                             <div className="flex items-center gap-1">
                               <Calendar className="h-4 w-4" />
                               {formatDate(game.createdAt)}

@@ -2,13 +2,9 @@ import { Router } from "express";
 import Stripe from "stripe";
 import * as db from "./db";
 
-// Initialize Stripe only if secret key is available
-let stripe: Stripe | null = null;
-if (process.env.STRIPE_SECRET_KEY) {
-  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2025-12-15.clover",
-  });
-}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-12-15.clover",
+});
 
 const router = Router();
 
@@ -19,11 +15,6 @@ router.post("/api/stripe/webhook", async (req, res) => {
   if (!sig) {
     console.error("[Stripe Webhook] Missing stripe-signature header");
     return res.status(400).send("Missing signature");
-  }
-
-  if (!stripe) {
-    console.error("[Stripe Webhook] Stripe not initialized - missing STRIPE_SECRET_KEY");
-    return res.status(500).send("Stripe not configured");
   }
 
   let event: Stripe.Event;

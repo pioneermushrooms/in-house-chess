@@ -7,6 +7,9 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Flag, HandshakeIcon, RotateCcw } from "lucide-react";
 import { chessSounds } from "@/lib/sounds";
@@ -38,6 +41,8 @@ export default function Game() {
   const [reviewChess] = useState(new Chess()); // Separate chess instance for review
   const [promotionMove, setPromotionMove] = useState<{ from: string; to: string } | null>(null);
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
+  const [showWagerModal, setShowWagerModal] = useState(false);
+  const [wagerAmount, setWagerAmount] = useState("");
 
   const { data: game, isLoading } = trpc.game.getById.useQuery(
     { gameId: gameId! },
@@ -45,6 +50,42 @@ export default function Game() {
   );
 
   const { data: player } = trpc.player.getOrCreate.useQuery();
+  const { data: wagerProposal, refetch: refetchWagerProposal } = trpc.wager.getProposal.useQuery(
+    { gameId: gameId! },
+    { enabled: !!gameId, refetchInterval: 2000 }
+  );
+
+  const proposeWager = trpc.wager.propose.useMutation({
+    onSuccess: () => {
+      toast.success("Wager proposed! Waiting for opponent to accept...");
+      setShowWagerModal(false);
+      setWagerAmount("");
+      refetchWagerProposal();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const acceptWager = trpc.wager.accept.useMutation({
+    onSuccess: () => {
+      toast.success("Wager accepted! Credits locked. Good luck!");
+      refetchWagerProposal();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const rejectWager = trpc.wager.reject.useMutation({
+    onSuccess: () => {
+      toast.info("Wager rejected");
+      refetchWagerProposal();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
 
   useEffect(() => {
     if (!gameId) {
@@ -261,6 +302,29 @@ export default function Game() {
     socket.emit("accept_draw", { gameId });
   };
 
+  const handleProposeWager = () => {
+    const amount = parseInt(wagerAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+    if (!player || amount > player.accountBalance) {
+      toast.error("Insufficient credits");
+      return;
+    }
+    proposeWager.mutate({ gameId: gameId!, amount });
+  };
+
+  const handleAcceptWager = () => {
+    if (!wagerProposal) return;
+    acceptWager.mutate({ proposalId: wagerProposal.id, gameId: gameId! });
+  };
+
+  const handleRejectWager = () => {
+    if (!wagerProposal) return;
+    rejectWager.mutate({ proposalId: wagerProposal.id });
+  };
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!socket || !chatInput.trim()) return;
@@ -441,6 +505,31 @@ export default function Game() {
                 <CapturedPieces fen={fen} />
               </CardContent>
             </Card>
+
+            {/* Wager Section */}
+            {gameStatus === "active" && game && !game.isComputerGame && game.stakeAmount === 0 && (
+              <Card className="bg-slate-800/50 border-slate-700">
+                <CardContent className="p-4">
+                  <Button
+                    onClick={() => setShowWagerModal(true)}
+                    variant="outline"
+                    className="w-full gap-2 border-yellow-500 text-yellow-400 hover:bg-yellow-500/10"
+                  >
+                    💰 Propose Wager
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Active Wager Display */}
+            {game && game.stakeAmount > 0 && (
+              <Card className="bg-gradient-to-r from-yellow-900/30 to-amber-900/30 border-yellow-500/50">
+                <CardContent className="p-4 text-center">
+                  <div className="text-yellow-400 font-bold text-lg">💰 {game.stakeAmount} Credits at Stake</div>
+                  <div className="text-xs text-slate-400 mt-1">Winner takes all</div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Game Controls */}
             {gameStatus === "active" && (
@@ -680,6 +769,79 @@ export default function Game() {
           </div>
         </div>
       </div>
+
+      {/* Wager Proposal Modal */}
+      <Dialog open={showWagerModal} onOpenChange={setShowWagerModal}>
+        <DialogContent className="bg-slate-800 border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="text-white">💰 Propose Wager</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Both players must agree. Credits will be locked until the game ends.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="wager-amount" className="text-white">Amount (credits)</Label>
+              <Input
+                id="wager-amount"
+                type="number"
+                min="1"
+                max={player?.accountBalance || 0}
+                value={wagerAmount}
+                onChange={(e) => setWagerAmount(e.target.value)}
+                placeholder="Enter amount"
+                className="bg-slate-900 border-slate-700 text-white"
+              />
+              <p className="text-xs text-slate-400">
+                Your balance: {player?.accountBalance || 0} credits
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowWagerModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleProposeWager}
+              disabled={proposeWager.isPending}
+              className="bg-yellow-600 hover:bg-yellow-700"
+            >
+              {proposeWager.isPending ? "Proposing..." : "Propose Wager"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Wager Proposal Notification */}
+      {wagerProposal && wagerProposal.status === 'pending' && player && wagerProposal.proposerId !== player.id && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top">
+          <Card className="bg-gradient-to-r from-yellow-900 to-amber-900 border-yellow-500 shadow-2xl">
+            <CardContent className="p-6">
+              <h3 className="text-white font-bold text-lg mb-2">💰 Wager Proposed!</h3>
+              <p className="text-slate-200 mb-4">
+                Your opponent wants to wager <span className="font-bold text-yellow-400">{wagerProposal.amount} credits</span> on this game.
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleAcceptWager}
+                  disabled={acceptWager.isPending}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  {acceptWager.isPending ? "Accepting..." : "Accept"}
+                </Button>
+                <Button
+                  onClick={handleRejectWager}
+                  disabled={rejectWager.isPending}
+                  variant="destructive"
+                  className="flex-1"
+                >
+                  {rejectWager.isPending ? "Rejecting..." : "Reject"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Promotion Dialog */}
       {promotionMove && (

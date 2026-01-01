@@ -6,7 +6,8 @@ import {
   Game, InsertGame, games,
   RatingChange, InsertRatingChange, ratingChanges,
   MatchmakingQueueEntry, InsertMatchmakingQueueEntry, matchmakingQueue,
-  Transaction, InsertTransaction, transactions
+  Transaction, InsertTransaction, transactions,
+  WagerProposal, InsertWagerProposal, wagerProposals
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -387,4 +388,97 @@ export async function getAllPlayers(): Promise<Player[]> {
   if (!db) return [];
 
   return db.select().from(players).orderBy(desc(players.rating));
+}
+
+
+// ===== Wager Proposal Functions =====
+
+export async function createWagerProposal(gameId: number, proposerId: number, amount: number): Promise<WagerProposal> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const [proposal] = await db.insert(wagerProposals).values({
+    gameId,
+    proposerId,
+    amount,
+    status: "pending",
+  });
+
+  return db.select().from(wagerProposals)
+    .where(eq(wagerProposals.id, proposal.insertId))
+    .then(rows => rows[0]);
+}
+
+export async function getActiveWagerProposal(gameId: number): Promise<WagerProposal | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  const proposals = await db.select().from(wagerProposals)
+    .where(eq(wagerProposals.gameId, gameId))
+    .orderBy(desc(wagerProposals.createdAt))
+    .limit(1);
+
+  return proposals[0] || null;
+}
+
+export async function acceptWagerProposal(proposalId: number, gameId: number, whitePlayerId: number, blackPlayerId: number, amount: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Update proposal status
+  await db.update(wagerProposals)
+    .set({ status: "accepted", acceptedAt: new Date() })
+    .where(eq(wagerProposals.id, proposalId));
+
+  // Update game stake amount
+  await db.update(games)
+    .set({ stakeAmount: amount })
+    .where(eq(games.id, gameId));
+
+  // Lock credits from both players
+  const whitePlayer = await getPlayerById(whitePlayerId);
+  const blackPlayer = await getPlayerById(blackPlayerId);
+
+  if (!whitePlayer || !blackPlayer) {
+    throw new Error("Players not found");
+  }
+
+  // Deduct from white player
+  const whiteNewBalance = whitePlayer.accountBalance - amount;
+  await db.update(players)
+    .set({ accountBalance: whiteNewBalance })
+    .where(eq(players.id, whitePlayerId));
+
+  await db.insert(transactions).values({
+    playerId: whitePlayerId,
+    amount: -amount,
+    type: "wager_locked",
+    gameId,
+    description: `Wager locked: ${amount} credits`,
+    balanceAfter: whiteNewBalance,
+  });
+
+  // Deduct from black player
+  const blackNewBalance = blackPlayer.accountBalance - amount;
+  await db.update(players)
+    .set({ accountBalance: blackNewBalance })
+    .where(eq(players.id, blackPlayerId));
+
+  await db.insert(transactions).values({
+    playerId: blackPlayerId,
+    amount: -amount,
+    type: "wager_locked",
+    gameId,
+    description: `Wager locked: ${amount} credits`,
+    balanceAfter: blackNewBalance,
+  });
+}
+
+export async function rejectWagerProposal(proposalId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(wagerProposals)
+    .set({ status: "rejected" })
+    .where(eq(wagerProposals.id, proposalId));
 }
