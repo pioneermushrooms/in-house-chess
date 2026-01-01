@@ -11,16 +11,26 @@ function getQueryParam(req: Request, key: string): string | undefined {
 
 export function registerOAuthRoutes(app: Express) {
   // Only register OAuth routes if OAuth is configured
+  console.log("[OAuth] Checking OAuth configuration...");
+  console.log("[OAuth] OAUTH_SERVER_URL:", process.env.OAUTH_SERVER_URL ? "SET" : "NOT SET");
+  console.log("[OAuth] VITE_APP_ID:", process.env.VITE_APP_ID ? "SET" : "NOT SET");
+  
   if (!process.env.OAUTH_SERVER_URL) {
     console.log("[OAuth] OAuth routes disabled - running in guest mode");
     return;
   }
   
+  console.log("[OAuth] Registering OAuth callback route at /api/oauth/callback");
+  
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
+    console.log("[OAuth] Callback route hit!");
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
+    console.log("[OAuth] Code:", code ? "present" : "missing");
+    console.log("[OAuth] State:", state ? "present" : "missing");
 
     if (!code || !state) {
+      console.log("[OAuth] Missing code or state, returning 400");
       res.status(400).json({ error: "code and state are required" });
       return;
     }

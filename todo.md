@@ -663,4 +663,11 @@
 - [x] Verify OAuth environment variables are set in Railway - all correct
 - [x] Check OAuth callback URL matches Railway domain - correct
 - [x] Reverted OAuth callback redirect from /lobby back to / for cookie processing
-- [ ] Test OAuth flow on Railway after revert
+- [x] Tested - site loads but OAuth callback returns 404
+
+## OAuth Callback Route 404 (V2.38)
+- [x] Add logging to OAuth route registration
+- [x] Add logging to OAuth callback handler
+- [x] Log environment variable status (OAUTH_SERVER_URL, VITE_APP_ID)
+- [ ] Deploy and check Railway logs to see if routes are registering
+- [ ] Verify OAuth callback route is being hit or returning 404
