@@ -227,7 +227,26 @@ class SDKServer {
         };
       }
       
-      // For OAuth sessions, verify JWT
+      // For Google OAuth sessions, cookie is the googleId (no JWT)
+      // Format: numeric Google ID like "117618499807891234567"
+      if (/^\d+$/.test(cookieValue)) {
+        return {
+          openId: cookieValue,
+          appId: ENV.appId,
+          name: '',
+        };
+      }
+      
+      // For user_X sessions (fallback from Google OAuth)
+      if (cookieValue.startsWith('user_')) {
+        return {
+          openId: cookieValue,
+          appId: ENV.appId,
+          name: '',
+        };
+      }
+      
+      // For Manus OAuth sessions, verify JWT
       const secretKey = this.getSessionSecret();
       const { payload } = await jwtVerify(cookieValue, secretKey, {
         algorithms: ["HS256"],
@@ -293,7 +312,14 @@ class SDKServer {
 
     const sessionUserId = session.openId;
     const signedInAt = new Date();
+    
+    // Try to find user by openId first
     let user = await db.getUserByOpenId(sessionUserId);
+    
+    // If not found and looks like a Google ID, try googleId
+    if (!user && /^\d+$/.test(sessionUserId)) {
+      user = await db.getUserByGoogleId(sessionUserId);
+    }
 
     // If user not in DB, sync from OAuth server automatically (only if OAuth is enabled)
     if (!user && this.isOAuthEnabled) {
