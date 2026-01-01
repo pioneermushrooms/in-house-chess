@@ -304,21 +304,28 @@ class SDKServer {
     // Regular authentication flow
     const cookies = this.parseCookies(req.headers.cookie);
     const sessionCookie = cookies.get(COOKIE_NAME);
+    console.log("[Auth] Session cookie from request:", sessionCookie ? `${sessionCookie.substring(0, 20)}...` : "NONE");
+    
     const session = await this.verifySession(sessionCookie);
 
     if (!session) {
+      console.warn("[Auth] Session verification failed");
       throw ForbiddenError("Invalid session cookie");
     }
 
     const sessionUserId = session.openId;
+    console.log("[Auth] Session verified, openId:", sessionUserId);
     const signedInAt = new Date();
     
     // Try to find user by openId first
     let user = await db.getUserByOpenId(sessionUserId);
+    console.log("[Auth] getUserByOpenId result:", user ? `found user ${user.id}` : "not found");
     
     // If not found and looks like a Google ID, try googleId
     if (!user && /^\d+$/.test(sessionUserId)) {
+      console.log("[Auth] Trying getUserByGoogleId for numeric session:", sessionUserId);
       user = await db.getUserByGoogleId(sessionUserId);
+      console.log("[Auth] getUserByGoogleId result:", user ? `found user ${user.id}` : "not found");
     }
 
     // If user not in DB, sync from OAuth server automatically (only if OAuth is enabled)
