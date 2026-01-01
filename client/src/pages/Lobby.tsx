@@ -299,15 +299,28 @@ export default function Lobby() {
             <h1 className="text-4xl font-bold text-white mb-2">In-House Chess Club</h1>
             <p className="text-slate-400">Welcome back, {player.alias}</p>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => player && setLocation(`/profile/${player.id}`)}
-            className="gap-2"
-            disabled={!player}
-          >
-            <User className="h-4 w-4" />
-            Profile
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => player && setLocation(`/profile/${player.id}`)}
+              className="gap-2"
+              disabled={!player}
+            >
+              <User className="h-4 w-4" />
+              Profile
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                // Clear session and redirect to home
+                document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+                window.location.href = '/';
+              }}
+              className="gap-2 border-red-500/50 text-red-400 hover:bg-red-500/10"
+            >
+              Sign Out
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

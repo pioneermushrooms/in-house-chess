@@ -645,3 +645,11 @@
 - [x] Added const utils = trpc.useUtils() in Lobby.tsx
 - [x] Cashout mutation now properly invalidates player query cache
 - [ ] Test cashout with sufficient balance
+
+
+## New User 404 Error & Sign-Out (V2.35)
+- [ ] Fix 404 error when new user signs in (needs more info from user)
+- [ ] Check OAuth callback and player creation flow
+- [x] Add sign-out button in lobby header
+- [x] Sign-out button clears session cookie and redirects to home
+- [ ] Test sign-in/sign-out flow with multiple accounts
