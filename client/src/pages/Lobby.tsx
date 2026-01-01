@@ -314,7 +314,15 @@ export default function Lobby() {
                   <div className="pt-4 border-t border-slate-700">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-400">{player.accountBalance || 0} credits</div>
-                      <div className="text-sm text-slate-400">Account Balance</div>
+                      <div className="text-sm text-slate-400 mb-3">Account Balance</div>
+                      <Button
+                        onClick={() => setLocation("/buy-credits")}
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 border-blue-500 text-blue-400 hover:bg-blue-500/10"
+                      >
+                        💳 Buy Credits
+                      </Button>
                     </div>
                   </div>
                 </div>

@@ -543,3 +543,15 @@
 - [x] Fix chat being pushed down by move history (re-align layout)
 - [x] Add chess piece emoji quick reactions (♔♕♖♗♘♙)
 - [x] Add taunting emoji reactions (🍳 cooked, 💀 blundered, 🔥 brilliant, etc.)
+
+
+## Stripe Payment Integration (V2.26)
+- [x] Add Stripe feature to project with webdev_add_feature
+- [x] Configure Stripe API keys (secret and publishable) - via Management UI
+- [x] Define credit purchase packages (e.g., $5=500 credits, $10=1100 credits)
+- [x] Create Buy Credits page with Stripe Checkout
+- [x] Implement payment success webhook handler
+- [x] Add credits to player account after successful payment
+- [x] Add "Buy Credits" button in lobby
+- [ ] Test complete payment flow (requires Stripe keys in Management UI)
+- [ ] Write vitest tests for payment webhook

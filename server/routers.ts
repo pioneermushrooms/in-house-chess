@@ -4,6 +4,12 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+import Stripe from "stripe";
+import { CREDIT_PACKAGES, getTotalCredits } from "../shared/creditPackages";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-12-15.clover",
+});
 
 export const appRouter = router({
   system: systemRouter,
@@ -477,6 +483,66 @@ export const appRouter = router({
       }
       return await db.getAllPlayers();
     }),
+  }),
+
+  payment: router({
+    // Get available credit packages
+    getPackages: publicProcedure.query(() => {
+      return CREDIT_PACKAGES;
+    }),
+
+    // Create Stripe checkout session for credit purchase
+    createCheckoutSession: protectedProcedure
+      .input(z.object({
+        packageId: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const pkg = CREDIT_PACKAGES.find(p => p.id === input.packageId);
+        if (!pkg) {
+          throw new Error('Invalid package ID');
+        }
+
+        const player = await db.getPlayerByUserId(ctx.user.id);
+        if (!player) {
+          throw new Error('Player profile not found');
+        }
+
+        const totalCredits = getTotalCredits(pkg);
+        const origin = ctx.req.headers.origin || 'http://localhost:3000';
+
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          line_items: [
+            {
+              price_data: {
+                currency: 'usd',
+                product_data: {
+                  name: pkg.name,
+                  description: `${totalCredits} credits for In-House Chess Club${pkg.bonus > 0 ? ` (includes ${pkg.bonus} bonus credits!)` : ''}`,
+                },
+                unit_amount: pkg.priceUsd,
+              },
+              quantity: 1,
+            },
+          ],
+          mode: 'payment',
+          success_url: `${origin}/lobby?payment=success`,
+          cancel_url: `${origin}/buy-credits?payment=cancelled`,
+          customer_email: ctx.user.email || undefined,
+          client_reference_id: ctx.user.id.toString(),
+          metadata: {
+            user_id: ctx.user.id.toString(),
+            player_id: player.id.toString(),
+            package_id: pkg.id,
+            credits: totalCredits.toString(),
+            customer_email: ctx.user.email || '',
+            customer_name: ctx.user.name || '',
+          },
+          allow_promotion_codes: true,
+        });
+
+        return { url: session.url };
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;
