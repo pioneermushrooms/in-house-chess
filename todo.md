@@ -738,10 +738,10 @@
 - [ ] Verify complete OAuth flow works
 
 
-## Railway Deployment Blocked by Schema Migration (V2.43)
-- [x] Pushed Google OAuth code to GitHub
-- [x] Found issue: Railway stuck on unique constraint prompt
-- [ ] Fix schema to allow NULL googleId values
-- [ ] Push fixed schema to GitHub
-- [ ] Verify Railway deployment succeeds
-- [ ] Test Google OAuth login
+## Google OAuth Redirect URI Issue (V2.44)
+- [x] Google OAuth button works - redirects to Google
+- [x] Found issue: redirect_uri using http:// instead of https://
+- [x] Found cause: Railway reverse proxy makes req.protocol return 'http'
+- [x] Fixed: Use x-forwarded-proto header to detect HTTPS
+- [ ] Push fix to GitHub
+- [ ] Test OAuth login completes successfully

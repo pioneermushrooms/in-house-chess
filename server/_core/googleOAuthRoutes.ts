@@ -21,7 +21,9 @@ export function setupGoogleOAuthRoutes(app: Express) {
   // Initiate Google OAuth flow
   app.get("/api/oauth/google/login", (req: Request, res: Response) => {
     try {
-      const redirectUri = `${req.protocol}://${req.get("host")}/api/oauth/google/callback`;
+      // Force HTTPS for production (Railway uses reverse proxy, so req.protocol is 'http')
+      const protocol = req.get('x-forwarded-proto') || req.protocol;
+      const redirectUri = `${protocol}://${req.get("host")}/api/oauth/google/callback`;
       const authUrl = getGoogleAuthUrl(redirectUri);
       res.redirect(authUrl);
     } catch (error) {
