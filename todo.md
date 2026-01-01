@@ -746,3 +746,8 @@
 - [x] Remove sdk.createSession() call (doesn't exist)
 - [x] Use simple cookie-based session like guest login
 - [ ] Push fix to GitHub for Railway deployment
+
+## V2.51: Fix User Lookup Order for Google OAuth
+- [x] Change authenticateRequest to try getUserByGoogleId FIRST for numeric sessions
+- [x] Skip getUserByOpenId for Google OAuth (numeric IDs won't match openId field)
+- [ ] Test and verify OAuth works end-to-end

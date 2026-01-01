@@ -304,7 +304,7 @@ class SDKServer {
     // Regular authentication flow
     const cookies = this.parseCookies(req.headers.cookie);
     const sessionCookie = cookies.get(COOKIE_NAME);
-    console.log("[Auth] Session cookie from request:", sessionCookie ? `${sessionCookie.substring(0, 20)}...` : "NONE");
+    console.log("[Auth] Cookie from request:", sessionCookie ? `${sessionCookie.substring(0, 15)}...` : "NONE");
     
     const session = await this.verifySession(sessionCookie);
 
@@ -317,15 +317,18 @@ class SDKServer {
     console.log("[Auth] Session verified, openId:", sessionUserId);
     const signedInAt = new Date();
     
-    // Try to find user by openId first
-    let user = await db.getUserByOpenId(sessionUserId);
-    console.log("[Auth] getUserByOpenId result:", user ? `found user ${user.id}` : "not found");
+    let user: User | undefined;
     
-    // If not found and looks like a Google ID, try googleId
-    if (!user && /^\d+$/.test(sessionUserId)) {
-      console.log("[Auth] Trying getUserByGoogleId for numeric session:", sessionUserId);
+    // For numeric sessions (Google OAuth), try googleId FIRST
+    if (/^\d+$/.test(sessionUserId)) {
+      console.log("[Auth] Numeric session detected, trying getUserByGoogleId:", sessionUserId);
       user = await db.getUserByGoogleId(sessionUserId);
-      console.log("[Auth] getUserByGoogleId result:", user ? `found user ${user.id}` : "not found");
+      console.log("[Auth] getUserByGoogleId:", user ? `found ${user.id}` : "not found");
+    } else {
+      // For non-numeric sessions (Manus OAuth, guest), try openId
+      console.log("[Auth] Non-numeric session, trying getUserByOpenId");
+      user = await db.getUserByOpenId(sessionUserId);
+      console.log("[Auth] getUserByOpenId:", user ? `found ${user.id}` : "not found");
     }
 
     // If user not in DB, sync from OAuth server automatically (only if OAuth is enabled)
