@@ -738,10 +738,11 @@
 - [ ] Verify complete OAuth flow works
 
 
-## Google OAuth Redirect URI Issue (V2.44)
-- [x] Google OAuth button works - redirects to Google
-- [x] Found issue: redirect_uri using http:// instead of https://
-- [x] Found cause: Railway reverse proxy makes req.protocol return 'http'
-- [x] Fixed: Use x-forwarded-proto header to detect HTTPS
+## Google OAuth Callback Error (V2.45)
+- [x] HTTPS redirect URI fix deployed
+- [x] Google login initiated successfully
+- [x] User redirected back to callback
+- [x] Analyzed Railway logs - callback also using HTTP
+- [x] Fixed callback handler to use x-forwarded-proto
 - [ ] Push fix to GitHub
-- [ ] Test OAuth login completes successfully
+- [ ] Test complete OAuth flow
