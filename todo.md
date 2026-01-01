@@ -748,6 +748,6 @@
 - [ ] Push fix to GitHub for Railway deployment
 
 ## V2.51: Fix User Lookup Order for Google OAuth
-- [x] Change authenticateRequest to try getUserByGoogleId FIRST for numeric sessions
-- [x] Skip getUserByOpenId for Google OAuth (numeric IDs won't match openId field)
+- [ ] Change authenticateRequest to try getUserByGoogleId FIRST for numeric sessions
+- [ ] Skip getUserByOpenId for Google OAuth (numeric IDs won't match openId field)
 - [ ] Test and verify OAuth works end-to-end
