@@ -656,3 +656,11 @@
 - [x] Fix 404 error - changed OAuth callback redirect from / to /lobby
 - [x] Simplified OAuth flow: callback → /lobby → /select-alias (if no player)
 - [ ] Test complete OAuth flow with new user account in incognito
+
+
+## OAuth 404 Still Occurring (V2.37)
+- [x] Check Railway deployment status - latest code deployed
+- [x] Verify OAuth environment variables are set in Railway - all correct
+- [x] Check OAuth callback URL matches Railway domain - correct
+- [x] Reverted OAuth callback redirect from /lobby back to / for cookie processing
+- [ ] Test OAuth flow on Railway after revert
