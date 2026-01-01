@@ -64,6 +64,13 @@
       "when": 1767283171722,
       "tag": "0008_sudden_hairball",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1767284244063,
+      "tag": "0009_spooky_tana_nile",
+      "breakpoints": true
     }
   ]
 }

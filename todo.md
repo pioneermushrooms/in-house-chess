@@ -728,3 +728,20 @@
 - [ ] Update Railway environment variables
 - [ ] Test Google OAuth login on Railway
 - [ ] Verify account persistence and credit security
+
+
+## Google OAuth Deployment (V2.43)
+- [ ] Push Google OAuth code to GitHub
+- [ ] Verify Railway auto-deployed the new code
+- [ ] Check Railway logs for Google OAuth route registration
+- [ ] Test login button redirects to Google (not Manus)
+- [ ] Verify complete OAuth flow works
+
+
+## Railway Deployment Blocked by Schema Migration (V2.43)
+- [x] Pushed Google OAuth code to GitHub
+- [x] Found issue: Railway stuck on unique constraint prompt
+- [ ] Fix schema to allow NULL googleId values
+- [ ] Push fixed schema to GitHub
+- [ ] Verify Railway deployment succeeds
+- [ ] Test Google OAuth login

@@ -14,9 +14,9 @@ export const users = mysqlTable("users", {
   /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
   openId: varchar("openId", { length: 64 }).unique(),
   /** Google OAuth identifier (sub claim from Google). Unique per user. */
-  googleId: varchar("googleId", { length: 64 }).unique(),
+  googleId: varchar("googleId", { length: 64 }),
   name: text("name"),
-  email: varchar("email", { length: 320 }).unique(),
+  email: varchar("email", { length: 320 }),
   avatarUrl: text("avatarUrl"),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
