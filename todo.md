@@ -547,11 +547,13 @@
 
 ## Stripe Payment Integration (V2.26)
 - [x] Add Stripe feature to project with webdev_add_feature
-- [x] Configure Stripe API keys (secret and publishable) - via Management UI
+- [x] Configure Stripe API keys (secret and publishable) - via Railway env vars
 - [x] Define credit purchase packages (e.g., $5=500 credits, $10=1100 credits)
 - [x] Create Buy Credits page with Stripe Checkout
 - [x] Implement payment success webhook handler
 - [x] Add credits to player account after successful payment
 - [x] Add "Buy Credits" button in lobby
-- [ ] Test complete payment flow (requires Stripe keys in Management UI)
+- [x] Fix Railway crash - make Stripe initialization optional
+- [x] Create comprehensive STRIPE-SETUP.md guide
+- [ ] Test complete payment flow (requires Stripe keys in Railway)
 - [ ] Write vitest tests for payment webhook

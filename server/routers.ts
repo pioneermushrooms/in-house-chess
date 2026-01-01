@@ -7,9 +7,16 @@ import * as db from "./db";
 import Stripe from "stripe";
 import { CREDIT_PACKAGES, getTotalCredits } from "../shared/creditPackages";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-12-15.clover",
-});
+// Initialize Stripe only if secret key is available
+let stripe: Stripe | null = null;
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2025-12-15.clover",
+  });
+  console.log("[Stripe] Initialized successfully");
+} else {
+  console.warn("[Stripe] STRIPE_SECRET_KEY not found - payment features disabled");
+}
 
 export const appRouter = router({
   system: systemRouter,
@@ -497,6 +504,10 @@ export const appRouter = router({
         packageId: z.string(),
       }))
       .mutation(async ({ input, ctx }) => {
+        if (!stripe) {
+          throw new Error('Payment system is not configured. Please add STRIPE_SECRET_KEY to environment variables.');
+        }
+
         const pkg = CREDIT_PACKAGES.find(p => p.id === input.packageId);
         if (!pkg) {
           throw new Error('Invalid package ID');
