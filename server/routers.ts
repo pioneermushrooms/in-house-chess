@@ -214,6 +214,21 @@ export const appRouter = router({
         await db.updatePlayerStats(input.playerId, { canvasData: input.data });
         return { success: true };
       }),
+
+    // Update payout method
+    updatePayoutMethod: protectedProcedure
+      .input(z.object({ 
+        payoutMethod: z.string().min(1).max(255),
+        payoutMethodType: z.enum(['venmo', 'paypal', 'zelle'])
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const player = await db.getPlayerByUserId(ctx.user.id);
+        if (!player) {
+          throw new Error('Player profile not found');
+        }
+        await db.updatePlayerPayoutMethod(player.id, input.payoutMethod, input.payoutMethodType);
+        return { success: true };
+      }),
   }),
 
   leaderboard: router({
@@ -571,26 +586,27 @@ export const appRouter = router({
         amount: z.number().min(100).max(500) // Min $1, Max $5 per transaction
       }))
       .mutation(async ({ input, ctx }) => {
-        if (!stripe) {
-          throw new Error('Stripe not configured');
-        }
-
         const player = await db.getPlayerByUserId(ctx.user.id);
         if (!player) {
           throw new Error('Player profile not found');
         }
 
+        // Check if player has set payout method
+        if (!player.payoutMethod || !player.payoutMethodType) {
+          throw new Error('Please set your payout method in your profile before requesting a cashout');
+        }
+
         // Security: Check daily cashout limit (10 transactions per day)
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const allTransactions = await db.getTransactions(player.id, 100);
-        const cashoutTransactions = allTransactions.filter(
-          (t: any) => 
-            new Date(t.createdAt) >= today &&
-            (t.type === 'cashout_pending' || t.type === 'cashout_completed')
+        const allCashouts = await db.getAllCashouts(100);
+        const todayCashouts = allCashouts.filter(
+          (c: any) => 
+            c.playerId === player.id &&
+            new Date(c.createdAt) >= today
         );
 
-        if (cashoutTransactions.length >= 10) {
+        if (todayCashouts.length >= 10) {
           throw new Error('Daily cashout limit reached (10 transactions per day). Please try again tomorrow.');
         }
 
@@ -599,7 +615,7 @@ export const appRouter = router({
           throw new Error('Insufficient credits for cashout');
         }
 
-        // Deduct credits immediately and create pending transaction
+        // Deduct credits immediately
         const newBalance = player.accountBalance - input.amount;
         await db.updatePlayerStats(player.id, { accountBalance: newBalance });
         
@@ -607,19 +623,28 @@ export const appRouter = router({
         await db.addCredits(
           player.id,
           -input.amount,
-          `Cashout request for $${(input.amount / 100).toFixed(2)} USD (Transaction ${cashoutTransactions.length + 1}/10 today)`
+          `Cashout request for $${(input.amount / 100).toFixed(2)} USD via ${player.payoutMethodType}`
         );
 
-        // Note: In production, you would create a Stripe payout here
-        // For now, we'll mark it as completed immediately
-        // TODO: Implement actual Stripe Connect payout
+        // Create cashout request for admin processing
+        const usdAmount = (input.amount / 100).toFixed(2);
+        await db.createCashoutRequest({
+          playerId: player.id,
+          amount: input.amount,
+          usdAmount,
+          payoutMethod: player.payoutMethod,
+          payoutMethodType: player.payoutMethodType,
+          status: 'pending',
+        });
+
+        // TODO: Send notification to admin
         
         return {
           success: true,
           amount: input.amount,
-          usdAmount: (input.amount / 100).toFixed(2),
-          remainingToday: 10 - (cashoutTransactions.length + 1),
-          message: `Cashout request submitted for $${(input.amount / 100).toFixed(2)}. Funds will be transferred within 3-5 business days. You have ${10 - (cashoutTransactions.length + 1)} cashouts remaining today.`,
+          usdAmount,
+          remainingToday: 10 - (todayCashouts.length + 1),
+          message: `Cashout request submitted for $${usdAmount} to your ${player.payoutMethodType} account. Admin will process it within 1-2 business days. You have ${10 - (todayCashouts.length + 1)} cashouts remaining today.`,
         };
       }),
   }),
@@ -859,6 +884,85 @@ export const appRouter = router({
         averageRating: Math.round(players.reduce((sum, p) => sum + p.rating, 0) / players.length),
       };
     }),
+
+    // Get pending cashouts (admin only)
+    getPendingCashouts: protectedProcedure.query(async ({ ctx }) => {
+      const ADMIN_EMAIL = 'schuldt91@gmail.com';
+      if (ctx.user.email !== ADMIN_EMAIL) {
+        throw new Error('Unauthorized: Admin access required');
+      }
+      const cashouts = await db.getPendingCashouts();
+      // Fetch player data for each cashout
+      const cashoutsWithPlayers = await Promise.all(
+        cashouts.map(async (cashout) => {
+          const player = await db.getPlayerById(cashout.playerId);
+          return { ...cashout, player };
+        })
+      );
+      return cashoutsWithPlayers;
+    }),
+
+    // Get all cashouts (admin only)
+    getAllCashouts: protectedProcedure
+      .input(z.object({ limit: z.number().optional() }))
+      .query(async ({ input, ctx }) => {
+        const ADMIN_EMAIL = 'schuldt91@gmail.com';
+        if (ctx.user.email !== ADMIN_EMAIL) {
+          throw new Error('Unauthorized: Admin access required');
+        }
+        const cashouts = await db.getAllCashouts(input.limit || 50);
+        // Fetch player data for each cashout
+        const cashoutsWithPlayers = await Promise.all(
+          cashouts.map(async (cashout) => {
+            const player = await db.getPlayerById(cashout.playerId);
+            return { ...cashout, player };
+          })
+        );
+        return cashoutsWithPlayers;
+      }),
+
+    // Complete cashout (admin only)
+    completeCashout: protectedProcedure
+      .input(z.object({ 
+        cashoutId: z.number(),
+        notes: z.string().optional()
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const ADMIN_EMAIL = 'schuldt91@gmail.com';
+        if (ctx.user.email !== ADMIN_EMAIL) {
+          throw new Error('Unauthorized: Admin access required');
+        }
+        await db.completeCashout(input.cashoutId, ctx.user.email, input.notes);
+        return { success: true };
+      }),
+
+    // Fail cashout and refund credits (admin only)
+    failCashout: protectedProcedure
+      .input(z.object({ 
+        cashoutId: z.number(),
+        notes: z.string().min(5)
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const ADMIN_EMAIL = 'schuldt91@gmail.com';
+        if (ctx.user.email !== ADMIN_EMAIL) {
+          throw new Error('Unauthorized: Admin access required');
+        }
+        // Get cashout details to refund credits
+        const cashouts = await db.getAllCashouts(1000);
+        const cashout = cashouts.find((c: any) => c.id === input.cashoutId);
+        if (!cashout) {
+          throw new Error('Cashout not found');
+        }
+        // Refund credits to player
+        await db.addCredits(
+          cashout.playerId,
+          cashout.amount,
+          `Cashout failed - refund: ${input.notes}`
+        );
+        // Mark cashout as failed
+        await db.failCashout(input.cashoutId, ctx.user.email, input.notes);
+        return { success: true };
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;

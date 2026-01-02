@@ -42,6 +42,8 @@ export const players = mysqlTable("players", {
   draws: int("draws").default(0).notNull(),
   gamesPlayed: int("gamesPlayed").default(0).notNull(),
   accountBalance: int("accountBalance").default(0).notNull(), // Internal credits for betting
+  payoutMethod: varchar("payoutMethod", { length: 255 }), // Venmo/PayPal/Zelle username or email
+  payoutMethodType: mysqlEnum("payoutMethodType", ["venmo", "paypal", "zelle"]), // Type of payout method
   canvasData: text("canvasData"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -194,3 +196,24 @@ export const syncedSessions = mysqlTable("syncedSessions", {
 
 export type SyncedSession = typeof syncedSessions.$inferSelect;
 export type InsertSyncedSession = typeof syncedSessions.$inferInsert;
+
+/**
+ * Cashout requests table.
+ * Tracks manual cashout requests that require admin processing.
+ */
+export const cashoutRequests = mysqlTable("cashoutRequests", {
+  id: int("id").autoincrement().primaryKey(),
+  playerId: int("playerId").notNull().references(() => players.id),
+  amount: int("amount").notNull(), // Credits to cash out
+  usdAmount: varchar("usdAmount", { length: 16 }).notNull(), // USD equivalent (e.g., "5.00")
+  payoutMethod: varchar("payoutMethod", { length: 255 }).notNull(), // Venmo/PayPal/Zelle username
+  payoutMethodType: mysqlEnum("payoutMethodType", ["venmo", "paypal", "zelle"]).notNull(),
+  status: mysqlEnum("status", ["pending", "completed", "failed"]).default("pending").notNull(),
+  completedBy: varchar("completedBy", { length: 255 }), // Admin email who processed it
+  completedAt: timestamp("completedAt"),
+  notes: text("notes"), // Admin notes
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CashoutRequest = typeof cashoutRequests.$inferSelect;
+export type InsertCashoutRequest = typeof cashoutRequests.$inferInsert;

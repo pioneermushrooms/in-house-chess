@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE cashoutRequests (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  playerId INT NOT NULL,\n  amount INT NOT NULL,\n  usdAmount VARCHAR(16) NOT NULL,\n  payoutMethod VARCHAR(255) NOT NULL,\n  payoutMethodType ENUM('venmo', 'paypal', 'zelle') NOT NULL,\n  status ENUM('pending', 'completed', 'failed') NOT NULL DEFAULT 'pending',\n  completedBy VARCHAR(255),\n  completedAt TIMESTAMP NULL,\n  notes TEXT,\n  createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (playerId) REFERENCES players(id)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CLnct8dkeNkwEf.d4aab037a1db --database H3ST3PoK7akrmaFC8LSYTs --execute CREATE TABLE cashoutRequests (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  playerId INT NOT NULL,\n  amount INT NOT NULL,\n  usdAmount VARCHAR(16) NOT NULL,\n  payoutMethod VARCHAR(255) NOT NULL,\n  payoutMethodType ENUM('venmo', 'paypal', 'zelle') NOT NULL,\n  status ENUM('pending', 'completed', 'failed') NOT NULL DEFAULT 'pending',\n  completedBy VARCHAR(255),\n  completedAt TIMESTAMP NULL,\n  notes TEXT,\n  createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (playerId) REFERENCES players(id)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 600
+}

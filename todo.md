@@ -809,3 +809,14 @@
 - [x] Remove restriction preventing admin from adjusting own credits
 - [x] Add admin panel link to navigation for easy access
 - [ ] Test admin credit adjustments on own account
+
+## V2.60: Manual Cashout System
+- [x] Add payoutMethod field to players table (Venmo/PayPal/Zelle username/email)
+- [x] Add payoutMethodType field (venmo, paypal, zelle)
+- [x] Add UI in cashout modal for users to set their payout method
+- [x] Update cashout request to require payout method
+- [x] Create cashoutRequests table to track pending/completed cashouts
+- [x] Add admin panel section to view pending cashouts
+- [x] Add admin ability to mark cashouts as completed
+- [ ] Send owner notification when cashout is requested
+- [x] Show payout method in admin cashout view

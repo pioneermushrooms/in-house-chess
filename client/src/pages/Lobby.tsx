@@ -83,6 +83,8 @@ export default function Lobby() {
   const [stakeAmount, setStakeAmount] = useState("");
   const [isCashoutModalOpen, setIsCashoutModalOpen] = useState(false);
   const [cashoutAmount, setCashoutAmount] = useState("");
+  const [payoutMethod, setPayoutMethod] = useState("");
+  const [payoutMethodType, setPayoutMethodType] = useState<'venmo' | 'paypal' | 'zelle'>('venmo');
 
   const utils = trpc.useUtils();
   
@@ -189,6 +191,16 @@ export default function Lobby() {
     onSuccess: (data) => {
       toast.success("Computer game created!");
       setLocation(`/game/${data.gameId}`);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const updatePayoutMethod = trpc.player.updatePayoutMethod.useMutation({
+    onSuccess: () => {
+      toast.success('Payout method updated!');
+      utils.player.getProfile.invalidate();
     },
     onError: (error) => {
       toast.error(error.message);
@@ -706,6 +718,62 @@ export default function Lobby() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-4">
+            {/* Payout Method Section */}
+            {(!player?.payoutMethod || !player?.payoutMethodType) && (
+              <div className="bg-blue-900/20 border border-blue-700/50 rounded p-3 space-y-3">
+                <p className="text-blue-400 text-sm font-medium">💳 Set Your Payout Method</p>
+                <div>
+                  <Label htmlFor="payout-type">Payment Service</Label>
+                  <select
+                    id="payout-type"
+                    value={payoutMethodType}
+                    onChange={(e) => setPayoutMethodType(e.target.value as 'venmo' | 'paypal' | 'zelle')}
+                    className="w-full bg-slate-700 border-slate-600 text-white rounded px-3 py-2"
+                  >
+                    <option value="venmo">Venmo</option>
+                    <option value="paypal">PayPal</option>
+                    <option value="zelle">Zelle</option>
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="payout-method">
+                    {payoutMethodType === 'venmo' ? 'Venmo Username' : 
+                     payoutMethodType === 'paypal' ? 'PayPal Email' : 
+                     'Zelle Email/Phone'}
+                  </Label>
+                  <Input
+                    id="payout-method"
+                    type="text"
+                    value={payoutMethod}
+                    onChange={(e) => setPayoutMethod(e.target.value)}
+                    placeholder={payoutMethodType === 'venmo' ? '@username' : 'email@example.com'}
+                    className="bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+                <Button
+                  onClick={() => {
+                    if (!payoutMethod) {
+                      toast.error('Please enter your payout method');
+                      return;
+                    }
+                    updatePayoutMethod.mutate({ payoutMethod, payoutMethodType });
+                  }}
+                  disabled={updatePayoutMethod.isPending}
+                  size="sm"
+                  className="w-full"
+                >
+                  {updatePayoutMethod.isPending ? 'Saving...' : 'Save Payout Method'}
+                </Button>
+              </div>
+            )}
+            {player?.payoutMethod && player?.payoutMethodType && (
+              <div className="bg-green-900/20 border border-green-700/50 rounded p-3">
+                <p className="text-green-400 text-sm font-medium mb-1">✓ Payout Method Set</p>
+                <p className="text-xs text-slate-300">
+                  {player.payoutMethodType.charAt(0).toUpperCase() + player.payoutMethodType.slice(1)}: {player.payoutMethod}
+                </p>
+              </div>
+            )}
             <div>
               <Label htmlFor="cashout-amount">Amount (credits)</Label>
               <Input

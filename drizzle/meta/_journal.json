@@ -71,6 +71,13 @@
       "when": 1767310925467,
       "tag": "0009_red_oracle",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1767384122049,
+      "tag": "0010_fancy_hulk",
+      "breakpoints": true
     }
   ]
 }

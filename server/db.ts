@@ -9,7 +9,8 @@ import {
   Transaction, InsertTransaction, transactions,
   WagerProposal, InsertWagerProposal, wagerProposals,
   AdminAction, InsertAdminAction, adminActions,
-  SyncedSession, InsertSyncedSession, syncedSessions
+  SyncedSession, InsertSyncedSession, syncedSessions,
+  CashoutRequest, InsertCashoutRequest, cashoutRequests
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -696,4 +697,71 @@ export async function getOrCreateUserByEmail(data: {
   console.log("[OAuth] New user created:", newUser[0].id, newUser[0].email);
 
   return newUser[0];
+}
+
+// Cashout request queries
+export async function createCashoutRequest(data: InsertCashoutRequest) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(cashoutRequests).values(data);
+  return Number(result[0].insertId);
+}
+
+export async function getPendingCashouts() {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db
+    .select()
+    .from(cashoutRequests)
+    .where(eq(cashoutRequests.status, "pending"))
+    .orderBy(sql`${cashoutRequests.createdAt} DESC`);
+  return result;
+}
+
+export async function getAllCashouts(limit = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db
+    .select()
+    .from(cashoutRequests)
+    .orderBy(sql`${cashoutRequests.createdAt} DESC`)
+    .limit(limit);
+  return result;
+}
+
+export async function completeCashout(id: number, adminEmail: string, notes?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .update(cashoutRequests)
+    .set({
+      status: "completed",
+      completedBy: adminEmail,
+      completedAt: new Date(),
+      notes,
+    })
+    .where(eq(cashoutRequests.id, id));
+}
+
+export async function failCashout(id: number, adminEmail: string, notes: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .update(cashoutRequests)
+    .set({
+      status: "failed",
+      completedBy: adminEmail,
+      completedAt: new Date(),
+      notes,
+    })
+    .where(eq(cashoutRequests.id, id));
+}
+
+export async function updatePlayerPayoutMethod(playerId: number, payoutMethod: string, payoutMethodType: "venmo" | "paypal" | "zelle") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .update(players)
+    .set({ payoutMethod, payoutMethodType })
+    .where(eq(players.id, playerId));
 }

@@ -9,6 +9,211 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { toast } from "sonner";
 import { ArrowLeft, Shield, Users, DollarSign, Activity, Filter } from "lucide-react";
 
+function CashoutManagement() {
+  const utils = trpc.useUtils();
+  const { data: pendingCashouts, isLoading: loadingPending } = trpc.admin.getPendingCashouts.useQuery();
+  const { data: allCashouts, isLoading: loadingAll } = trpc.admin.getAllCashouts.useQuery({ limit: 50 });
+  const [selectedCashout, setSelectedCashout] = useState<any>(null);
+  const [notes, setNotes] = useState("");
+  const [showAll, setShowAll] = useState(false);
+
+  const completeCashout = trpc.admin.completeCashout.useMutation({
+    onSuccess: () => {
+      toast.success('Cashout marked as completed!');
+      setSelectedCashout(null);
+      setNotes("");
+      utils.admin.getPendingCashouts.invalidate();
+      utils.admin.getAllCashouts.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const failCashout = trpc.admin.failCashout.useMutation({
+    onSuccess: () => {
+      toast.success('Cashout failed and credits refunded!');
+      setSelectedCashout(null);
+      setNotes("");
+      utils.admin.getPendingCashouts.invalidate();
+      utils.admin.getAllCashouts.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const cashouts = showAll ? allCashouts : pendingCashouts;
+  const isLoading = showAll ? loadingAll : loadingPending;
+
+  return (
+    <Card className="bg-slate-800/50 border-slate-700">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Cashout Requests</CardTitle>
+            <CardDescription>
+              {showAll ? 'All cashout requests' : 'Pending cashout requests requiring processing'}
+            </CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAll(!showAll)}
+          >
+            {showAll ? 'Show Pending Only' : 'Show All'}
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <p className="text-slate-400 text-sm">Loading cashouts...</p>
+        ) : cashouts && cashouts.length > 0 ? (
+          <div className="space-y-3 max-h-[700px] overflow-y-auto">
+            {cashouts.map((cashout: any) => (
+              <div
+                key={cashout.id}
+                className={`p-4 rounded-lg border ${
+                  cashout.status === 'pending'
+                    ? 'bg-yellow-900/20 border-yellow-700/50'
+                    : cashout.status === 'completed'
+                    ? 'bg-green-900/20 border-green-700/50'
+                    : 'bg-red-900/20 border-red-700/50'
+                }`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="font-medium text-white text-lg">
+                        {cashout.player?.alias || `Player #${cashout.playerId}`}
+                      </span>
+                      <span className={`text-xs px-2 py-0.5 rounded ${
+                        cashout.status === 'pending'
+                          ? 'bg-yellow-600 text-yellow-100'
+                          : cashout.status === 'completed'
+                          ? 'bg-green-600 text-green-100'
+                          : 'bg-red-600 text-red-100'
+                      }`}>
+                        {cashout.status.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="text-sm text-slate-300 space-y-1">
+                      <div className="flex items-center gap-4">
+                        <span className="font-bold text-green-400 text-xl">
+                          ${cashout.usdAmount} USD
+                        </span>
+                        <span className="text-slate-400">({cashout.amount} credits)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-400">Payout:</span>
+                        <span className="font-medium">
+                          {cashout.payoutMethodType.charAt(0).toUpperCase() + cashout.payoutMethodType.slice(1)}
+                        </span>
+                        <span className="text-blue-400">{cashout.payoutMethod}</span>
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        Requested: {new Date(cashout.createdAt).toLocaleString()}
+                      </div>
+                      {cashout.completedAt && (
+                        <div className="text-xs text-slate-500">
+                          Processed: {new Date(cashout.completedAt).toLocaleString()} by {cashout.completedBy}
+                        </div>
+                      )}
+                      {cashout.notes && (
+                        <div className="text-xs text-slate-400 mt-2 p-2 bg-slate-700/50 rounded">
+                          <span className="font-medium">Notes:</span> {cashout.notes}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {cashout.status === 'pending' && (
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => setSelectedCashout(cashout)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        Process
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-slate-400 text-center py-8">
+            {showAll ? 'No cashout requests yet' : 'No pending cashout requests'}
+          </p>
+        )}
+      </CardContent>
+
+      {/* Process Cashout Dialog */}
+      <Dialog open={!!selectedCashout} onOpenChange={(open) => !open && setSelectedCashout(null)}>
+        <DialogContent className="bg-slate-800 border-slate-700 text-white">
+          <DialogHeader>
+            <DialogTitle>Process Cashout Request</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Send ${selectedCashout?.usdAmount} to {selectedCashout?.player?.alias} via {selectedCashout?.payoutMethodType}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div className="bg-blue-900/20 border border-blue-700/50 rounded p-3">
+              <p className="text-blue-400 text-sm font-medium mb-2">Payment Details</p>
+              <div className="text-sm text-slate-300 space-y-1">
+                <div><span className="text-slate-400">Method:</span> {selectedCashout?.payoutMethodType}</div>
+                <div><span className="text-slate-400">Account:</span> {selectedCashout?.payoutMethod}</div>
+                <div><span className="text-slate-400">Amount:</span> ${selectedCashout?.usdAmount} USD</div>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="notes">Notes (optional)</Label>
+              <Input
+                id="notes"
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Transaction ID, confirmation details, etc."
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  completeCashout.mutate({
+                    cashoutId: selectedCashout.id,
+                    notes: notes || undefined,
+                  });
+                }}
+                disabled={completeCashout.isPending || failCashout.isPending}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                {completeCashout.isPending ? 'Processing...' : 'Mark as Completed'}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (!notes || notes.length < 5) {
+                    toast.error('Please provide a reason for failure (minimum 5 characters)');
+                    return;
+                  }
+                  failCashout.mutate({
+                    cashoutId: selectedCashout.id,
+                    notes,
+                  });
+                }}
+                disabled={completeCashout.isPending || failCashout.isPending}
+              >
+                {failCashout.isPending ? 'Processing...' : 'Fail & Refund'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
 function TransactionHistory() {
   const [filterType, setFilterType] = useState<string>('');
   const { data: transactions, isLoading } = trpc.admin.getAllTransactions.useQuery({
@@ -104,7 +309,7 @@ export default function Admin() {
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustReason, setAdjustReason] = useState("");
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'players' | 'transactions'>('players');
+  const [activeTab, setActiveTab] = useState<'players' | 'transactions' | 'cashouts'>('players');
 
   const { data: isAdmin, isLoading: checkingAdmin } = trpc.admin.isAdmin.useQuery();
   const { data: players, isLoading: loadingPlayers } = trpc.admin.getAllPlayers.useQuery(
@@ -235,6 +440,12 @@ export default function Admin() {
           >
             Transaction History
           </Button>
+          <Button
+            variant={activeTab === 'cashouts' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('cashouts')}
+          >
+            Cashout Requests
+          </Button>
         </div>
 
         {activeTab === 'players' && (
@@ -328,6 +539,10 @@ export default function Admin() {
 
         {activeTab === 'transactions' && (
           <TransactionHistory />
+        )}
+
+        {activeTab === 'cashouts' && (
+          <CashoutManagement />
         )}
       </div>
 
