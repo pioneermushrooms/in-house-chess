@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Trophy, Swords, Link as LinkIcon, History, User, DollarSign } from "lucide-react";
+import { Trophy, Swords, Link as LinkIcon, History, User, DollarSign, Shield } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ActiveGames } from "@/components/ActiveGames";
 
@@ -87,6 +87,7 @@ export default function Lobby() {
   const utils = trpc.useUtils();
   
   const logoutMutation = trpc.auth.logout.useMutation();
+  const { data: isAdmin } = trpc.admin.isAdmin.useQuery();
   
   const { data: player, isLoading: playerLoading, refetch: refetchPlayer } = trpc.player.getOrCreate.useQuery(
     undefined,
@@ -302,6 +303,16 @@ export default function Lobby() {
             <p className="text-slate-400">Welcome back, {player.alias}</p>
           </div>
           <div className="flex gap-2">
+            {isAdmin && (
+              <Button
+                variant="outline"
+                onClick={() => setLocation('/admin')}
+                className="gap-2 border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+              >
+                <Shield className="h-4 w-4" />
+                Admin
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={() => player && setLocation(`/profile/${player.id}`)}

@@ -804,3 +804,8 @@
 - [x] Display overlay on checkmate, resignation, timeout, draw
 - [x] Show different messages for winner vs loser
 - [ ] Test with various wager amounts
+
+## V2.59: Admin UX Improvements
+- [x] Remove restriction preventing admin from adjusting own credits
+- [x] Add admin panel link to navigation for easy access
+- [ ] Test admin credit adjustments on own account

@@ -784,12 +784,6 @@ export const appRouter = router({
           throw new Error('Player not found');
         }
 
-        // Prevent admin from adjusting their own balance
-        const adminPlayer = await db.getPlayerByUserId(ctx.user.id);
-        if (adminPlayer && adminPlayer.id === input.playerId) {
-          throw new Error('Cannot adjust your own credit balance');
-        }
-
         const newBalance = player.accountBalance + input.amount;
         if (newBalance < 0) {
           throw new Error('Cannot reduce balance below zero');
