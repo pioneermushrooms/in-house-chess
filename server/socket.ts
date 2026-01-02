@@ -125,7 +125,9 @@ export function setupSocketIO(httpServer: HTTPServer) {
         }
         
         // If player is joining as black for the first time, assign them
+        console.log(`[Socket] canJoinAsBlack: ${canJoinAsBlack}, game.status: ${game.status}`);
         if (canJoinAsBlack && game.status === "waiting") {
+          console.log(`[Socket] Assigning player ${socket.playerId} as Black and setting status to active`);
           await updateGame(data.gameId, {
             blackPlayerId: socket.playerId,
             status: "active",
@@ -133,6 +135,7 @@ export function setupSocketIO(httpServer: HTTPServer) {
           });
           // Refresh game data
           const updatedGame = await getGameById(data.gameId);
+          console.log(`[Socket] Updated game status: ${updatedGame?.status}`);
           if (updatedGame) {
             Object.assign(game, updatedGame);
           }
@@ -175,9 +178,14 @@ export function setupSocketIO(httpServer: HTTPServer) {
         // Create activeGames entry if game has both players OR is a computer game
         const hasBothPlayers = latestGame.whitePlayerId && latestGame.blackPlayerId;
         const isComputerGameReady = latestGame.isComputerGame && (latestGame.whitePlayerId || latestGame.blackPlayerId);
+        console.log(`[Socket] ===== GAME STATE CHECK =====`);
+        console.log(`[Socket] Game ID: ${data.gameId}`);
+        console.log(`[Socket] Game Status: ${latestGame.status}`);
         console.log(`[Socket] hasBothPlayers check - White: ${latestGame.whitePlayerId}, Black: ${latestGame.blackPlayerId}, Result: ${hasBothPlayers}`);
         console.log(`[Socket] isComputerGame: ${latestGame.isComputerGame}, isComputerGameReady: ${isComputerGameReady}`);
         console.log(`[Socket] gameState exists: ${!!gameState}`);
+        console.log(`[Socket] activeGames Map size: ${activeGames.size}`);
+        console.log(`[Socket] activeGames Map keys: ${Array.from(activeGames.keys()).join(", ")}`);
         
         if (!gameState && (hasBothPlayers || isComputerGameReady)) {
           console.log(`[Socket] Creating activeGames entry for game ${data.gameId}`);

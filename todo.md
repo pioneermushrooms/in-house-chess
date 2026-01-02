@@ -770,3 +770,28 @@
 - [ ] Remove debug cookie logging
 - [x] Update frontend to use legacy OAuth route
 - [ ] Test complete OAuth flow with legacy system
+
+- [ ] Fix expired Stripe API key in Railway environment variables
+- [ ] Test credit purchase flow after updating key
+
+## V2.53: Credit Purchase OAuth User Sync Issue
+- [ ] Investigate OAuth user ID not syncing with player/credit system
+- [ ] Add debug logging to payment createCheckoutSession flow
+- [ ] Verify ctx.user contains correct user data during payment
+- [ ] Check if player lookup by userId is working correctly
+- [ ] Test credit purchase end-to-end after fixes
+
+## V2.54: Game Not Becoming Active Bug
+- [ ] Investigate why games don't become active when both players join
+- [ ] Check if wager system is blocking game activation
+- [ ] Fix move validation to allow moves in active games
+- [ ] Fix resign button to work in all game states
+- [ ] Test complete game flow: create → join → move → resign
+
+## V2.54: Critical Game Bugs After Wager System
+- [ ] Fix games not becoming active when both players join
+- [ ] Fix players unable to make moves (game stuck in waiting state)
+- [ ] Fix resign button not working
+- [ ] Fix chat not working anymore
+- [ ] Investigate if wager system is blocking game activation
+- [ ] Test complete game flow: create → join → move → chat → resign

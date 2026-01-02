@@ -518,12 +518,19 @@ export const appRouter = router({
         packageId: z.string(),
       }))
       .mutation(async ({ input, ctx }) => {
+        console.log('[Payment] createCheckoutSession called');
+        console.log('[Payment] ctx.user:', ctx.user);
+        console.log('[Payment] ctx.user.id:', ctx.user?.id);
+        console.log('[Payment] ctx.user.email:', ctx.user?.email);
+        
         const pkg = CREDIT_PACKAGES.find(p => p.id === input.packageId);
         if (!pkg) {
           throw new Error('Invalid package ID');
         }
 
+        console.log('[Payment] Looking up player by userId:', ctx.user.id);
         const player = await db.getPlayerByUserId(ctx.user.id);
+        console.log('[Payment] Player found:', player);
         if (!player) {
           throw new Error('Player profile not found');
         }
