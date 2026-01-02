@@ -355,6 +355,45 @@ export async function removeCredits(playerId: number, amount: number, descriptio
   });
 }
 
+export async function awardWagerToWinner(winnerPlayerId: number, loserPlayerId: number, stakeAmount: number, gameId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const winner = await db.select().from(players).where(eq(players.id, winnerPlayerId)).limit(1);
+  const loser = await db.select().from(players).where(eq(players.id, loserPlayerId)).limit(1);
+  
+  if (!winner.length || !loser.length) throw new Error("Player not found");
+
+  // Winner gets both stakes (their locked stake + loser's locked stake)
+  const totalPot = stakeAmount * 2;
+  const winnerNewBalance = winner[0].accountBalance + totalPot;
+
+  // Update winner's balance
+  await db.update(players)
+    .set({ accountBalance: winnerNewBalance })
+    .where(eq(players.id, winnerPlayerId));
+
+  // Record winner's transaction
+  await db.insert(transactions).values({
+    playerId: winnerPlayerId,
+    amount: totalPot,
+    type: "game_win",
+    gameId,
+    description: `Won ${totalPot} credits (${stakeAmount} stake + ${stakeAmount} from ${loser[0].alias})`,
+    balanceAfter: winnerNewBalance,
+  });
+
+  // Record loser's transaction (no balance change, just for history)
+  await db.insert(transactions).values({
+    playerId: loserPlayerId,
+    amount: -stakeAmount,
+    type: "game_loss",
+    gameId,
+    description: `Lost ${stakeAmount} credits to ${winner[0].alias}`,
+    balanceAfter: loser[0].accountBalance, // Balance already 0 from locking
+  });
+}
+
 export async function transferCredits(fromPlayerId: number, toPlayerId: number, amount: number, gameId: number, description: string): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -397,8 +436,24 @@ export async function transferCredits(fromPlayerId: number, toPlayerId: number, 
     balanceAfter: toNewBalance,
   });
 }
+export async function getAllTransactions(limit: number = 100, playerId?: number, type?: string): Promise<Transaction[]> {
+  const db = await getDb();
+  if (!db) return [];
 
-export async function getTransactions(playerId: number, limit: number = 20): Promise<any[]> {
+  let query = db.select().from(transactions).orderBy(desc(transactions.createdAt)).limit(limit);
+  
+  if (playerId) {
+    query = query.where(eq(transactions.playerId, playerId)) as any;
+  }
+  
+  if (type) {
+    query = query.where(eq(transactions.type, type)) as any;
+  }
+
+  return await query;
+}
+
+export async function getTransactions(playerId: number, limit: number = 20): Promise<Transaction[]> {
   const db = await getDb();
   if (!db) return [];
 

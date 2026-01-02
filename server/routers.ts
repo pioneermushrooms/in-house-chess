@@ -518,19 +518,12 @@ export const appRouter = router({
         packageId: z.string(),
       }))
       .mutation(async ({ input, ctx }) => {
-        console.log('[Payment] createCheckoutSession called');
-        console.log('[Payment] ctx.user:', ctx.user);
-        console.log('[Payment] ctx.user.id:', ctx.user?.id);
-        console.log('[Payment] ctx.user.email:', ctx.user?.email);
-        
         const pkg = CREDIT_PACKAGES.find(p => p.id === input.packageId);
         if (!pkg) {
           throw new Error('Invalid package ID');
         }
 
-        console.log('[Payment] Looking up player by userId:', ctx.user.id);
         const player = await db.getPlayerByUserId(ctx.user.id);
-        console.log('[Payment] Player found:', player);
         if (!player) {
           throw new Error('Player profile not found');
         }
@@ -835,6 +828,43 @@ export const appRouter = router({
 
         return await db.getAdminActions(input.limit || 50);
       }),
+
+    // Get all transactions (admin only)
+    getAllTransactions: protectedProcedure
+      .input(z.object({
+        limit: z.number().optional(),
+        playerId: z.number().optional(),
+        type: z.string().optional(),
+      }))
+      .query(async ({ input, ctx }) => {
+        const ADMIN_EMAIL = 'schuldt91@gmail.com';
+        if (ctx.user.email !== ADMIN_EMAIL) {
+          throw new Error('Unauthorized: Admin access required');
+        }
+
+        return await db.getAllTransactions(input.limit || 100, input.playerId, input.type);
+      }),
+
+    // Get system stats (admin only)
+    getSystemStats: protectedProcedure.query(async ({ ctx }) => {
+      const ADMIN_EMAIL = 'schuldt91@gmail.com';
+      if (ctx.user.email !== ADMIN_EMAIL) {
+        throw new Error('Unauthorized: Admin access required');
+      }
+
+      const players = await db.getAllPlayers();
+      const totalCredits = players.reduce((sum, p) => sum + p.accountBalance, 0);
+      const totalGames = players.reduce((sum, p) => sum + p.gamesPlayed, 0);
+      const totalWins = players.reduce((sum, p) => sum + p.wins, 0);
+      
+      return {
+        totalPlayers: players.length,
+        totalCredits,
+        totalGames,
+        totalWins,
+        averageRating: Math.round(players.reduce((sum, p) => sum + p.rating, 0) / players.length),
+      };
+    }),
   }),
 });
 export type AppRouter = typeof appRouter;

@@ -7,7 +7,96 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Shield, Users, DollarSign, Activity } from "lucide-react";
+import { ArrowLeft, Shield, Users, DollarSign, Activity, Filter } from "lucide-react";
+
+function TransactionHistory() {
+  const [filterType, setFilterType] = useState<string>('');
+  const { data: transactions, isLoading } = trpc.admin.getAllTransactions.useQuery({
+    limit: 200,
+    type: filterType || undefined,
+  });
+  const { data: players } = trpc.admin.getAllPlayers.useQuery();
+
+  const getPlayerAlias = (playerId: number) => {
+    return players?.find(p => p.id === playerId)?.alias || `Player #${playerId}`;
+  };
+
+  const transactionTypes = [
+    { value: '', label: 'All Types' },
+    { value: 'purchase', label: 'Purchase' },
+    { value: 'admin_adjustment', label: 'Admin Adjustment' },
+    { value: 'wager_locked', label: 'Wager Locked' },
+    { value: 'game_win', label: 'Game Win' },
+    { value: 'game_loss', label: 'Game Loss' },
+  ];
+
+  return (
+    <Card className="bg-slate-800/50 border-slate-700">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Transaction History</CardTitle>
+            <CardDescription>All credit transactions across the system</CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-slate-400" />
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="bg-slate-700 border-slate-600 text-white rounded px-3 py-1.5 text-sm"
+            >
+              {transactionTypes.map(type => (
+                <option key={type.value} value={type.value}>{type.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <p className="text-slate-400 text-sm">Loading transactions...</p>
+        ) : transactions && transactions.length > 0 ? (
+          <div className="space-y-2 max-h-[700px] overflow-y-auto">
+            {transactions.map((tx) => (
+              <div
+                key={tx.id}
+                className="p-3 bg-slate-700/50 rounded-lg text-sm"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium text-white">
+                      {getPlayerAlias(tx.playerId)}
+                    </span>
+                    <span className="text-xs px-2 py-0.5 bg-slate-600 rounded">
+                      {tx.type.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <span className={`font-bold text-lg ${
+                    tx.amount > 0 ? 'text-green-400' : 'text-red-400'
+                  }`}>
+                    {tx.amount > 0 ? '+' : ''}{tx.amount}
+                  </span>
+                </div>
+                {tx.description && (
+                  <p className="text-xs text-slate-400 mb-1">{tx.description}</p>
+                )}
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <span>{new Date(tx.createdAt).toLocaleString()}</span>
+                  <span>Balance after: {tx.balanceAfter}</span>
+                </div>
+                {tx.gameId && (
+                  <span className="text-xs text-blue-400">Game #{tx.gameId}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-slate-400 text-sm">No transactions found</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Admin() {
   const [, setLocation] = useLocation();
@@ -15,6 +104,7 @@ export default function Admin() {
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustReason, setAdjustReason] = useState("");
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'players' | 'transactions'>('players');
 
   const { data: isAdmin, isLoading: checkingAdmin } = trpc.admin.isAdmin.useQuery();
   const { data: players, isLoading: loadingPlayers } = trpc.admin.getAllPlayers.useQuery(
@@ -131,6 +221,23 @@ export default function Admin() {
           </Card>
         </div>
 
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant={activeTab === 'players' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('players')}
+          >
+            Players & Actions
+          </Button>
+          <Button
+            variant={activeTab === 'transactions' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('transactions')}
+          >
+            Transaction History
+          </Button>
+        </div>
+
+        {activeTab === 'players' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Players List */}
           <Card className="bg-slate-800/50 border-slate-700">
@@ -217,6 +324,11 @@ export default function Admin() {
             </CardContent>
           </Card>
         </div>
+        )}
+
+        {activeTab === 'transactions' && (
+          <TransactionHistory />
+        )}
       </div>
 
       {/* Adjust Credits Modal */}

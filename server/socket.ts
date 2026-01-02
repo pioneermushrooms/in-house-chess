@@ -9,7 +9,7 @@ import {
   updatePlayerStats,
   updatePlayerRating,
   recordRatingChange,
-  transferCredits,
+  awardWagerToWinner,
 } from "./db";
 import { getUserByOpenId } from "./db";
 import { sdk } from "./_core/sdk";
@@ -74,17 +74,37 @@ export function setupSocketIO(httpServer: HTTPServer) {
       }
 
       const payload = await sdk.verifySession(token);
+      console.log("[Socket.IO Auth] Payload from verifySession:", payload);
       if (!payload?.openId) {
+        console.log("[Socket.IO Auth] ERROR: Invalid token - no openId in payload");
         return next(new Error("Invalid token"));
       }
 
-      const user = await getUserByOpenId(payload.openId);
+      console.log("[Socket.IO Auth] Looking up user by openId:", payload.openId);
+      // Check if openId is numeric (Google ID)
+      const isNumeric = /^\d+$/.test(payload.openId);
+      console.log("[Socket.IO Auth] Is numeric (Google ID):", isNumeric);
+      
+      let user;
+      if (isNumeric) {
+        console.log("[Socket.IO Auth] Using getUserByGoogleId for:", payload.openId);
+        const { getUserByGoogleId } = await import("./db");
+        user = await getUserByGoogleId(payload.openId);
+      } else {
+        user = await getUserByOpenId(payload.openId);
+      }
+      
+      console.log("[Socket.IO Auth] User lookup result:", user ? `Found user ${user.id}` : "Not found");
       if (!user) {
+        console.log("[Socket.IO Auth] ERROR: User not found for openId:", payload.openId);
         return next(new Error("User not found"));
       }
 
+      console.log("[Socket.IO Auth] Looking up player for user:", user.id);
       const player = await getPlayerByUserId(user.id);
+      console.log("[Socket.IO Auth] Player lookup result:", player ? `Found player ${player.id}` : "Not found");
       if (!player) {
+        console.log("[Socket.IO Auth] ERROR: Player profile not found for user:", user.id);
         return next(new Error("Player profile not found"));
       }
 
@@ -93,6 +113,7 @@ export function setupSocketIO(httpServer: HTTPServer) {
       console.log(`[Socket.IO Auth] SUCCESS - User ${user.id}, Player ${player.id}`);
       next();
     } catch (error) {
+      console.error("[Socket.IO Auth] EXCEPTION:", error);
       next(new Error("Authentication failed"));
     }
   });
@@ -810,27 +831,29 @@ async function endGame(
     if (whitePlayer && blackPlayer) {
       try {
         if (result === "white_win") {
-          await transferCredits(
-            blackPlayer.id,
+          await awardWagerToWinner(
             whitePlayer.id,
+            blackPlayer.id,
             game.stakeAmount,
-            gameId,
-            `Won ${game.stakeAmount} credits from ${blackPlayer.alias}`
+            gameId
           );
-          console.log(`[Credits] Transferred ${game.stakeAmount} credits from ${blackPlayer.alias} to ${whitePlayer.alias}`);
+          console.log(`[Credits] Awarded ${game.stakeAmount * 2} credits to ${whitePlayer.alias} (winner)`);
         } else if (result === "black_win") {
-          await transferCredits(
-            whitePlayer.id,
+          await awardWagerToWinner(
             blackPlayer.id,
+            whitePlayer.id,
             game.stakeAmount,
-            gameId,
-            `Won ${game.stakeAmount} credits from ${whitePlayer.alias}`
+            gameId
           );
-          console.log(`[Credits] Transferred ${game.stakeAmount} credits from ${whitePlayer.alias} to ${blackPlayer.alias}`);
+          console.log(`[Credits] Awarded ${game.stakeAmount * 2} credits to ${blackPlayer.alias} (winner)`);
+        } else if (result === "draw") {
+          // For draws, return locked stakes to both players
+          await updatePlayerStats(whitePlayer.id, { accountBalance: whitePlayer.accountBalance + game.stakeAmount });
+          await updatePlayerStats(blackPlayer.id, { accountBalance: blackPlayer.accountBalance + game.stakeAmount });
+          console.log(`[Credits] Returned ${game.stakeAmount} credits to both players (draw)`);
         }
-        // For draws, no credit transfer (stakes are returned)
       } catch (error) {
-        console.error(`[Credits] Error transferring credits for game ${gameId}:`, error);
+        console.error(`[Credits] Error awarding credits for game ${gameId}:`, error);
       }
     }
   }
