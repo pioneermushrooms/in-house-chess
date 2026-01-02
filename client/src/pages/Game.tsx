@@ -581,19 +581,9 @@ export default function Game() {
               </div>
             )}
 
-            {/* Game Result */}
+            {/* Game Result - kept for backward compatibility but hidden */}
             {gameStatus === "completed" && (
-              <Card className="bg-slate-800/50 border-slate-700">
-                <CardContent className="p-6 text-center">
-                  <h3 className="text-2xl font-bold text-white mb-2">Game Over</h3>
-                  <p className="text-slate-300 mb-4">
-                    Result: {gameResult?.replace("_", " ")} - {endReason}
-                  </p>
-                  <Button onClick={() => setLocation("/lobby")}>
-                    Return to Lobby
-                  </Button>
-                </CardContent>
-              </Card>
+              <div className="hidden" />
             )}
           </div>
 
@@ -811,6 +801,94 @@ export default function Game() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Game Over Overlay */}
+      {gameStatus === "completed" && game && player && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-500">
+          <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-600 shadow-2xl max-w-md w-full mx-4">
+            <CardContent className="p-8 text-center">
+              {/* Result Title */}
+              <div className="mb-6">
+                {gameResult === "white_win" && (
+                  <>
+                    <div className="text-6xl mb-4">👑</div>
+                    <h2 className="text-3xl font-bold text-white mb-2">
+                      {game.whitePlayerId === player.id ? "Victory!" : "Defeat"}
+                    </h2>
+                    <p className="text-slate-300">
+                      White wins {endReason ? `by ${endReason}` : ""}
+                    </p>
+                  </>
+                )}
+                {gameResult === "black_win" && (
+                  <>
+                    <div className="text-6xl mb-4">👑</div>
+                    <h2 className="text-3xl font-bold text-white mb-2">
+                      {game.blackPlayerId === player.id ? "Victory!" : "Defeat"}
+                    </h2>
+                    <p className="text-slate-300">
+                      Black wins {endReason ? `by ${endReason}` : ""}
+                    </p>
+                  </>
+                )}
+                {gameResult === "draw" && (
+                  <>
+                    <div className="text-6xl mb-4">🤝</div>
+                    <h2 className="text-3xl font-bold text-white mb-2">Draw</h2>
+                    <p className="text-slate-300">
+                      {endReason || "Game drawn"}
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {/* Credits Display */}
+              {game.stakeAmount > 0 && (
+                <div className="mb-6 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                  <div className="text-sm text-slate-400 mb-2">Wager Result</div>
+                  {gameResult === "draw" ? (
+                    <div className="text-xl font-bold text-blue-400">
+                      Stakes Returned: {game.stakeAmount / 2} credits each
+                    </div>
+                  ) : (
+                    <div>
+                      {((gameResult === "white_win" && game.whitePlayerId === player.id) ||
+                        (gameResult === "black_win" && game.blackPlayerId === player.id)) ? (
+                        <div className="text-2xl font-bold text-green-400">
+                          +{game.stakeAmount} credits won! 💰
+                        </div>
+                      ) : (
+                        <div className="text-2xl font-bold text-red-400">
+                          -{game.stakeAmount / 2} credits lost
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setLocation("/lobby")}
+                  className="flex-1"
+                  size="lg"
+                >
+                  Return to Lobby
+                </Button>
+                <Button
+                  onClick={() => window.location.reload()}
+                  variant="outline"
+                  className="flex-1"
+                  size="lg"
+                >
+                  Review Game
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Wager Proposal Notification */}
       {wagerProposal && wagerProposal.status === 'pending' && player && wagerProposal.proposerId !== player.id && (

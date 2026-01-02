@@ -779,10 +779,10 @@
 - [ ] Test checkmate credit distribution
 
 ## V2.56: Admin Credit Management System
-- [ ] Review existing admin controls for credits
-- [ ] Add admin UI to view all player balances
-- [ ] Add admin ability to manually add/remove credits from any player
-- [ ] Add admin transaction history view with filters
+- [x] Review existing admin controls for credits
+- [x] Add admin UI to view all player balances
+- [x] Add admin ability to manually add/remove credits from any player
+- [x] Add admin transaction history view with filters
 - [ ] Add admin ability to reverse/refund transactions
 - [ ] Test all credit flows: wager lock → game win → credit award
 - [ ] Test draw scenario: wager lock → draw → stakes returned
@@ -790,3 +790,17 @@
 - [ ] Test timeout/abandonment credit flow
 - [ ] Disconnect Stripe payment temporarily until credit system is verified
 - [ ] Document all credit transaction types and flows
+
+## V2.57: Matchmaking Bug - Only One Player Added
+- [ ] Investigate why find-a-match only adds one player to game
+- [ ] Check matchmaking queue logic
+- [ ] Check game creation with matched players
+- [ ] Ensure both players are assigned white/black roles
+- [ ] Test matchmaking with 2+ players in queue
+
+## V2.58: Wager Payout Fix & Game Over UI
+- [x] Fix credit payout - winner gets total pot correctly
+- [x] Add game-over overlay showing winner, result, and credits won/lost
+- [x] Display overlay on checkmate, resignation, timeout, draw
+- [x] Show different messages for winner vs loser
+- [ ] Test with various wager amounts

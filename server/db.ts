@@ -364,9 +364,8 @@ export async function awardWagerToWinner(winnerPlayerId: number, loserPlayerId: 
   
   if (!winner.length || !loser.length) throw new Error("Player not found");
 
-  // Winner gets both stakes (their locked stake + loser's locked stake)
-  const totalPot = stakeAmount * 2;
-  const winnerNewBalance = winner[0].accountBalance + totalPot;
+  // Winner gets the total pot (stakeAmount is already the total from both players)
+  const winnerNewBalance = winner[0].accountBalance + stakeAmount;
 
   // Update winner's balance
   await db.update(players)
@@ -376,20 +375,21 @@ export async function awardWagerToWinner(winnerPlayerId: number, loserPlayerId: 
   // Record winner's transaction
   await db.insert(transactions).values({
     playerId: winnerPlayerId,
-    amount: totalPot,
+    amount: stakeAmount,
     type: "game_win",
     gameId,
-    description: `Won ${totalPot} credits (${stakeAmount} stake + ${stakeAmount} from ${loser[0].alias})`,
+    description: `Won ${stakeAmount} credits from ${loser[0].alias}`,
     balanceAfter: winnerNewBalance,
   });
 
   // Record loser's transaction (no balance change, just for history)
+  const perPlayerStake = stakeAmount / 2;
   await db.insert(transactions).values({
     playerId: loserPlayerId,
-    amount: -stakeAmount,
+    amount: -perPlayerStake,
     type: "game_loss",
     gameId,
-    description: `Lost ${stakeAmount} credits to ${winner[0].alias}`,
+    description: `Lost ${perPlayerStake} credits to ${winner[0].alias}`,
     balanceAfter: loser[0].accountBalance, // Balance already 0 from locking
   });
 }

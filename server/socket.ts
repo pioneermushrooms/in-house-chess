@@ -837,7 +837,7 @@ async function endGame(
             game.stakeAmount,
             gameId
           );
-          console.log(`[Credits] Awarded ${game.stakeAmount * 2} credits to ${whitePlayer.alias} (winner)`);
+          console.log(`[Credits] Awarded ${game.stakeAmount} credits to ${whitePlayer.alias} (winner)`);
         } else if (result === "black_win") {
           await awardWagerToWinner(
             blackPlayer.id,
@@ -845,7 +845,7 @@ async function endGame(
             game.stakeAmount,
             gameId
           );
-          console.log(`[Credits] Awarded ${game.stakeAmount * 2} credits to ${blackPlayer.alias} (winner)`);
+          console.log(`[Credits] Awarded ${game.stakeAmount} credits to ${blackPlayer.alias} (winner)`);
         } else if (result === "draw") {
           // For draws, return locked stakes to both players
           await updatePlayerStats(whitePlayer.id, { accountBalance: whitePlayer.accountBalance + game.stakeAmount });
