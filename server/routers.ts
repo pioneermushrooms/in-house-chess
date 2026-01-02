@@ -402,14 +402,7 @@ export const appRouter = router({
           throw new Error("Player profile not found");
         }
 
-        // Add to queue
-        await db.addToMatchmakingQueue({
-          playerId: player.id,
-          rating: player.rating,
-          timeControl: input.timeControl,
-        });
-
-        // Try to find a match immediately
+        // Try to find a match FIRST before adding to queue
         const opponent = await db.findMatchmakingOpponent(input.timeControl, player.rating, player.id);
         
         if (opponent) {
@@ -453,6 +446,13 @@ export const appRouter = router({
 
           return { matched: true, gameId, opponentId: opponent.playerId };
         }
+
+        // No match found, add to queue and wait
+        await db.addToMatchmakingQueue({
+          playerId: player.id,
+          rating: player.rating,
+          timeControl: input.timeControl,
+        });
 
         return { matched: false };
       }),

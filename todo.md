@@ -827,3 +827,9 @@
 - [x] Add socket notification system for match_found event
 - [x] Fix player assignment or notification flow (added real-time socket notification)
 - [ ] Test matchmaking end-to-end with multiple players
+
+## V2.62: Matchmaking & Navigation Bugs
+- [x] Fix matchmaking creating two separate games (33 and 34) instead of one shared game
+- [x] Fix "Return to Lobby" button error after game ends (useSocket destructuring)
+- [x] Investigate why both players aren't joining the same game (race condition)
+- [ ] Test matchmaking flow completely with two accounts

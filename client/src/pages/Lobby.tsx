@@ -75,7 +75,7 @@ function RecentGamesPreview() {
 export default function Lobby() {
   const { user, loading } = useAuth();
   const [, setLocation] = useLocation();
-  const socket = useSocket();
+  const { socket } = useSocket();
   const [inviteCode, setInviteCode] = useState("");
   const [searching, setSearching] = useState(false);
   const [timeControl, setTimeControl] = useState("10+0");
