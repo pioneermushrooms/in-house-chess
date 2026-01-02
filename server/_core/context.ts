@@ -13,11 +13,26 @@ export async function createContext(
 ): Promise<TrpcContext> {
   let user: User | null = null;
 
-  try {
-    user = await sdk.authenticateRequest(opts.req);
-  } catch (error) {
-    // Authentication is optional for public procedures.
-    user = null;
+  // Try Passport.js session first
+  if (opts.req.user) {
+    user = opts.req.user as User;
+    console.log("[Context] Using Passport session for user:", user.id, user.email);
+  } else {
+    // Fallback to legacy SDK authentication (guest sessions, etc.)
+    try {
+      user = await sdk.authenticateRequest(opts.req);
+      if (user) {
+        console.log("[Context] Using legacy SDK auth for user:", user.id, user.email || user.openId);
+      }
+    } catch (error) {
+      // Authentication is optional for public procedures.
+      console.error("[Context] SDK authentication failed:", error);
+      user = null;
+    }
+  }
+
+  if (!user) {
+    console.log("[Context] No authenticated user");
   }
 
   return {

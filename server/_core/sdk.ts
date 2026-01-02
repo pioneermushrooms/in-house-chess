@@ -353,10 +353,16 @@ class SDKServer {
       throw ForbiddenError("User not found");
     }
 
-    await db.upsertUser({
-      openId: user.openId,
-      lastSignedIn: signedInAt,
-    });
+    // Only update lastSignedIn for users with openId (Manus OAuth)
+    // Google OAuth users don't have openId, skip upsert
+    if (user.openId) {
+      await db.upsertUser({
+        openId: user.openId,
+        lastSignedIn: signedInAt,
+      });
+    } else {
+      console.log("[Auth] Skipping upsert for Google OAuth user (no openId)");
+    }
 
     return user;
   }

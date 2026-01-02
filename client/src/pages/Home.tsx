@@ -22,6 +22,7 @@ export default function Home() {
     if (isManusPreview) {
       window.location.href = getLoginUrl();
     } else {
+      // Use legacy Google OAuth
       window.location.href = '/api/oauth/google/login';
     }
   };

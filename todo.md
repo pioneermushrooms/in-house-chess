@@ -751,3 +751,22 @@
 - [ ] Change authenticateRequest to try getUserByGoogleId FIRST for numeric sessions
 - [ ] Skip getUserByOpenId for Google OAuth (numeric IDs won't match openId field)
 - [ ] Test and verify OAuth works end-to-end
+
+## V2.53: Fix Passport session recognition
+- [x] Add debug logging to show which auth method is being used
+- [x] Ensure Passport session takes priority over legacy cookies
+- [ ] Verify frontend receives authenticated user from Passport
+- [ ] Test complete OAuth flow end-to-end
+
+## V2.54: Fix Passport session persistence
+- [ ] Add session debugging to track session lifecycle
+- [x] Fix session storage configuration
+- [x] Verify session persists across requests
+- [ ] Test complete OAuth flow without redirect loops
+
+## Remove Passport.js (V2.48)
+- [x] Remove Passport.js implementation (legacy OAuth already works)
+- [x] Remove Passport.js dependencies
+- [ ] Remove debug cookie logging
+- [x] Update frontend to use legacy OAuth route
+- [ ] Test complete OAuth flow with legacy system
