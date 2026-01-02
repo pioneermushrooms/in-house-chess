@@ -441,6 +441,16 @@ export const appRouter = router({
             isRated: 1,
           });
 
+          // Notify both players via socket
+          const io = (global as any).io;
+          if (io) {
+            // Notify the opponent (who was waiting in queue)
+            io.to(`player_${opponent.playerId}`).emit('match_found', {
+              gameId,
+              opponentId: player.id,
+            });
+          }
+
           return { matched: true, gameId, opponentId: opponent.playerId };
         }
 

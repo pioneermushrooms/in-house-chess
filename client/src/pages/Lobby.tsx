@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Trophy, Swords, Link as LinkIcon, History, User, DollarSign, Shield } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ActiveGames } from "@/components/ActiveGames";
+import { useSocket } from "@/hooks/useSocket";
 
 function RecentGamesPreview() {
   const { data: games, isLoading } = trpc.player.getGames.useQuery({ limit: 5 });
@@ -74,6 +75,7 @@ function RecentGamesPreview() {
 export default function Lobby() {
   const { user, loading } = useAuth();
   const [, setLocation] = useLocation();
+  const socket = useSocket();
   const [inviteCode, setInviteCode] = useState("");
   const [searching, setSearching] = useState(false);
   const [timeControl, setTimeControl] = useState("10+0");
@@ -115,6 +117,25 @@ export default function Lobby() {
       }
     };
   }, [searching]);
+
+  // Listen for match_found event from server
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleMatchFound = (data: { gameId: number; opponentId: number }) => {
+      console.log('[Lobby] Match found event received:', data);
+      toast.success('Match found!');
+      setSearching(false);
+      setSearchStartTime(null);
+      setLocation(`/game/${data.gameId}`);
+    };
+
+    socket.on('match_found', handleMatchFound);
+
+    return () => {
+      socket.off('match_found', handleMatchFound);
+    };
+  }, [socket, setLocation]);
 
   const { data: leaderboard } = trpc.leaderboard.getTop.useQuery({ limit: 10 });
 

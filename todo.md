@@ -820,3 +820,10 @@
 - [x] Add admin ability to mark cashouts as completed
 - [ ] Send owner notification when cashout is requested
 - [x] Show payout method in admin cashout view
+
+## V2.61: Matchmaking Bug - Only Acceptor Joins Game
+- [x] Investigate why only acceptor joins matched games, not requester
+- [x] Check if both players are assigned in database (both assigned correctly)
+- [x] Add socket notification system for match_found event
+- [x] Fix player assignment or notification flow (added real-time socket notification)
+- [ ] Test matchmaking end-to-end with multiple players

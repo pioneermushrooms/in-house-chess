@@ -44,6 +44,9 @@ export function setupSocketIO(httpServer: HTTPServer) {
     path: "/socket.io/",
   });
   console.log("[Socket.IO] Socket.IO server initialized");
+  
+  // Store io instance globally for access in tRPC routers
+  (global as any).io = io;
 
   // Authentication middleware
   io.use(async (socket: AuthenticatedSocket, next) => {
@@ -122,6 +125,10 @@ export function setupSocketIO(httpServer: HTTPServer) {
     console.log(`[Socket.IO] ===== NEW CONNECTION =====`);
     console.log(`[Socket.IO] Player ${socket.playerId} connected (User ID: ${socket.userId})`);
     console.log(`[Socket.IO] Socket ID: ${socket.id}`);
+    
+    // Join player-specific room for matchmaking notifications
+    socket.join(`player_${socket.playerId}`);
+    console.log(`[Socket.IO] Player ${socket.playerId} joined room player_${socket.playerId}`);
 
     // Join game
     socket.on(
